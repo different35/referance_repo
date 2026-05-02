@@ -3,9 +3,9 @@ import type { Config } from 'drizzle-kit';
 export default {
   schema: './src/db/schema.ts',
   out: './drizzle',
-  dialect: 'sqlite',
+  dialect: 'libsql',
   dbCredentials: {
-    url: process.env.DATABASE_URL?.replace('file:', '') ?? './data/swarm.db',
+    url: process.env.DATABASE_URL ?? './data/swarm.db',
   },
   verbose: true,
   strict: true,
