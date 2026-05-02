@@ -1,0 +1,50 @@
+{
+  "name": "swarm-vscode-bridge",
+  "displayName": "Swarm Bridge",
+  "description": "Swarm Panel için lokal VSCode köprüsü — Claude Code CLI, MCP araçları ve terminal bağlantısı",
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "swarm-panel",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "swarm.connect", "title": "Swarm: Köprüyü Bağla" },
+      { "command": "swarm.disconnect", "title": "Swarm: Köprüyü Kapat" },
+      { "command": "swarm.openPanel", "title": "Swarm: Paneli Tarayıcıda Aç" }
+    ],
+    "configuration": {
+      "title": "Swarm Bridge",
+      "properties": {
+        "swarm.bridgePort": {
+          "type": "number",
+          "default": 3001,
+          "description": "Bridge WebSocket sunucusu portu (sadece 127.0.0.1)"
+        },
+        "swarm.panelUrl": {
+          "type": "string",
+          "default": "http://localhost:5173",
+          "description": "Tarayıcıda açılacak panel URL'si"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/vscode": "^1.85.0",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.7.2"
+  }
+}

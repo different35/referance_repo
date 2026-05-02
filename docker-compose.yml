@@ -1,0 +1,62 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: swarm-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - PUBLIC_DOMAIN=${PUBLIC_DOMAIN:-localhost}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-admin@example.com}
+    depends_on:
+      - server
+      - web
+    networks:
+      - swarm
+
+  server:
+    build:
+      context: .
+      dockerfile: packages/server/Dockerfile
+    container_name: swarm-server
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - SERVER_PORT=3000
+      - SERVER_HOST=0.0.0.0
+      - DATABASE_URL=file:/data/swarm.db
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - BETTER_AUTH_URL=https://${PUBLIC_DOMAIN}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+      - VAPID_SUBJECT=${VAPID_SUBJECT:-}
+      - PUBLIC_DOMAIN=${PUBLIC_DOMAIN:-localhost}
+    volumes:
+      - swarm_data:/data
+    networks:
+      - swarm
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+    container_name: swarm-web
+    restart: unless-stopped
+    networks:
+      - swarm
+
+volumes:
+  caddy_data:
+  caddy_config:
+  swarm_data:
+
+networks:
+  swarm:
+    driver: bridge
