@@ -1,0 +1,31 @@
+{
+  "name": "swarm-panel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Swarm Management Panel - centralized activity orchestration with mobile-first PWA",
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20.10.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "dev:server": "pnpm --filter @swarm/server dev",
+    "dev:web": "pnpm --filter @swarm/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @swarm/web test:e2e",
+    "db:push": "pnpm --filter @swarm/server db:push",
+    "db:studio": "pnpm --filter @swarm/server db:studio",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "clean": "pnpm -r exec rm -rf dist node_modules && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.2"
+  }
+}

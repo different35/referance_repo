@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+data/
+storage/
+
+# Test
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Caches
+.cache/
+.turbo/
+.parcel-cache/
+.eslintcache
+.vite/
+
+# OS
+Thumbs.db
+
+# VSCode bridge build
+tools/vscode-bridge/out/
+tools/vscode-bridge/*.vsix
