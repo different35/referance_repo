@@ -6,7 +6,7 @@ const envSchema = z.object({
   SERVER_PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   SERVER_HOST: z.string().default('0.0.0.0'),
   DATABASE_URL: z.string().default('file:./data/swarm.db'),
-  BETTER_AUTH_SECRET: z.string().min(16, 'BETTER_AUTH_SECRET en az 16 karakter olmalı'),
+  BETTER_AUTH_SECRET: z.string().min(16).default('dev-secret-change-in-production'),
   BETTER_AUTH_URL: z.string().url().default('http://localhost:3000'),
   ANTHROPIC_API_KEY: z.string().optional(),
   VSCODE_BRIDGE_PORT: z.coerce.number().int().default(3001),
