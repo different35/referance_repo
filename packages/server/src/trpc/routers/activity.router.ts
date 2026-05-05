@@ -2,6 +2,7 @@ import { router, publicProcedure, protectedProcedure } from '../trpc.js';
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
 import * as schema from '../../db/schema.js';
+import { ActivityService } from '../../services/activity.service.js';
 
 export const activityRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
@@ -47,43 +48,33 @@ export const activityRouter = router({
   start: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const [activity] = await ctx.db
-        .update(schema.activities)
-        .set({
-          state: 'starting',
-          startedAt: new Date(),
-        })
-        .where(eq(schema.activities.id, input.id))
-        .returning();
-      return { success: !!activity, activity };
+      const service = new ActivityService(ctx.db);
+      const activity = await service.startActivity(input.id);
+      return { success: true, activity };
     }),
 
   stop: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const [activity] = await ctx.db
-        .update(schema.activities)
-        .set({
-          state: 'stopped',
-          stoppedAt: new Date(),
-        })
-        .where(eq(schema.activities.id, input.id))
-        .returning();
-      return { success: !!activity, activity };
+      const service = new ActivityService(ctx.db);
+      const activity = await service.stopActivity(input.id);
+      return { success: true, activity };
     }),
 
   setError: protectedProcedure
     .input(z.object({ id: z.string(), error: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const [activity] = await ctx.db
-        .update(schema.activities)
-        .set({
-          state: 'error',
-          error: input.error,
-        })
-        .where(eq(schema.activities.id, input.id))
-        .returning();
-      return { success: !!activity };
+      const service = new ActivityService(ctx.db);
+      const activity = await service.setError(input.id, input.error);
+      return { success: true, activity };
+    }),
+
+  resetError: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const service = new ActivityService(ctx.db);
+      const activity = await service.resetError(input.id);
+      return { success: true, activity };
     }),
 
   delete: protectedProcedure
