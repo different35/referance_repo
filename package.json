@@ -25,7 +25,8 @@
     "clean": "pnpm -r exec rm -rf dist node_modules && rm -rf node_modules"
   },
   "devDependencies": {
-    "typescript": "^5.7.2",
-    "@types/node": "^22.10.2"
+    "@types/node": "^22.10.2",
+    "better-sqlite3": "^12.9.0",
+    "typescript": "^5.7.2"
   }
 }
