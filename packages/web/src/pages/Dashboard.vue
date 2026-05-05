@@ -1,185 +1,384 @@
 <template>
-  <div class="min-h-screen bg-slate-950 text-white p-6">
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold mb-2">Swarm Panel</h1>
-      <p class="text-slate-400">Real-time Activity Management</p>
-    </div>
+  <div class="min-h-screen bg-[#080c10] text-white flex flex-col">
 
-    <!-- Top 3 Cards: Strategist, Key-Sales, Community -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-      <!-- Strategist Card -->
-      <div class="bg-slate-900 rounded-lg border border-slate-800 p-6 hover:border-slate-700 transition">
-        <div class="flex items-start justify-between mb-4">
-          <div>
-            <h3 class="text-yellow-400 text-sm font-semibold mb-1">STRATEGIST</h3>
-            <p class="text-slate-400 text-xs">A strategic path first principles analysis on growth levers, tech infrastructure, and revenue extension.</p>
-          </div>
-          <div class="w-16 h-16 bg-blue-500 rounded opacity-20"></div>
+    <!-- ── Top Bar ──────────────────────────────────────────── -->
+    <header class="flex items-center justify-between px-6 py-2 border-b border-slate-900 bg-[#0a0e14]">
+      <!-- Left: Brand + View -->
+      <div class="flex items-center gap-3">
+        <span class="text-[10px] font-bold tracking-widest text-slate-500">● AGENT HQ</span>
+        <span class="text-slate-800">—</span>
+        <span class="text-[10px] font-semibold tracking-widest text-slate-400">FLOOR VIEW</span>
+      </div>
+
+      <!-- Center: Live counters -->
+      <div class="flex items-center gap-6 text-[11px]">
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-500">Agents:</span>
+          <span class="font-bold text-white">{{ totalAgents }}</span>
         </div>
-        <div class="flex gap-3 text-xs">
-          <span class="px-2 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 rounded">$1.8M</span>
-          <span class="px-2 py-1 bg-red-500 bg-opacity-20 text-red-400 rounded">TBD</span>
-          <span class="px-2 py-1 bg-blue-500 bg-opacity-20 text-blue-400 rounded">100K</span>
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-500">Advisors:</span>
+          <span class="font-bold text-white">4</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-500">Active:</span>
+          <span class="font-bold text-green-400">{{ activeAgents }}</span>
         </div>
       </div>
 
-      <!-- Key-Sales Card -->
-      <div class="bg-slate-900 rounded-lg border border-slate-800 p-6 hover:border-slate-700 transition">
-        <div class="flex items-start justify-between mb-4">
-          <div>
-            <h3 class="text-orange-400 text-sm font-semibold mb-1">KEY-SALES</h3>
-            <p class="text-slate-400 text-xs">Just deployed. Awaiting first inbound leads. SAAS qualification pipeline ready, high-touch to cold 20-50...</p>
-          </div>
-          <div class="w-16 h-16 bg-orange-500 rounded opacity-20"></div>
-        </div>
-        <div class="text-xs text-orange-400">+98% <span class="text-slate-400">sales velocity</span></div>
+      <!-- Right: User + Time -->
+      <div class="flex items-center gap-3 text-[11px]">
+        <span class="text-slate-500">Thomas</span>
+        <span class="text-slate-700">|</span>
+        <span class="text-slate-400 font-mono">{{ currentTime }}</span>
       </div>
+    </header>
 
-      <!-- Community Card -->
-      <div class="bg-slate-900 rounded-lg border border-slate-800 p-6 hover:border-slate-700 transition">
-        <div class="flex items-start justify-between mb-4">
-          <div>
-            <h3 class="text-blue-400 text-sm font-semibold mb-1">COMMUNITY</h3>
-            <p class="text-slate-400 text-xs">First cycle completed. Launch: blood member tracking — only to 50 hubside.</p>
-          </div>
-          <div class="w-16 h-16 bg-blue-600 rounded opacity-20"></div>
-        </div>
-        <div class="flex gap-3 text-xs">
-          <span class="px-2 py-1 bg-blue-500 bg-opacity-20 text-blue-400 rounded">+88%</span>
-          <span class="px-2 py-1 bg-slate-700 bg-opacity-40 text-slate-300 rounded">+1.2k</span>
-        </div>
+    <!-- ── Nav Tabs ──────────────────────────────────────────── -->
+    <nav class="flex items-center gap-1 px-6 py-2 border-b border-slate-900">
+      <button
+        v-for="tab in navTabs"
+        :key="tab.id"
+        class="flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-semibold tracking-wider transition-colors"
+        :class="activeTab === tab.id
+          ? 'bg-slate-800 text-white'
+          : 'text-slate-600 hover:text-slate-400'"
+        @click="activeTab = tab.id"
+      >
+        <span class="w-1.5 h-1.5 rounded-full" :class="tab.color" />
+        {{ tab.label }}
+      </button>
+
+      <div class="ml-auto flex items-center gap-3 text-[10px] text-slate-600">
+        <button class="hover:text-slate-400 transition-colors">+ NAVA BUYLERI</button>
+        <span class="text-slate-800">|</span>
+        <button class="hover:text-slate-400 transition-colors">MISSIONS</button>
       </div>
-    </div>
+    </nav>
 
-    <!-- Marketing Section -->
-    <div class="mb-12">
-      <h2 class="text-yellow-400 text-lg font-bold mb-6 flex items-center gap-2">
-        <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
-        MARKETING
-      </h2>
+    <!-- ── Main Floor ────────────────────────────────────────── -->
+    <main class="flex-1 overflow-y-auto px-6 pt-6">
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <!-- Active Campaign 1 -->
-        <div class="bg-slate-900 rounded-lg border border-slate-800 p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
-            <span class="text-xs text-slate-400">ACTIVE</span>
+      <!-- HEYCALLI Group -->
+      <section class="mb-10">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-[10px] font-bold tracking-widest text-yellow-500">⬡ HEYCALLI</span>
+            <span class="text-[10px] text-slate-600">Strateji ve Satış Grubu</span>
           </div>
-          <h4 class="text-sm font-semibold mb-3">Campaign A</h4>
-          <div class="space-y-2">
-            <div class="flex justify-between text-xs">
-              <span>Progress</span>
-              <span class="text-slate-400">65%</span>
+          <span class="text-[10px] text-slate-700">2 agents</span>
+        </div>
+
+        <div class="flex gap-4 overflow-x-auto pb-2">
+
+          <!-- STRATEGIST Card -->
+          <div class="relative flex-shrink-0 w-80 bg-[#0d1117] border border-slate-800 rounded-lg overflow-hidden hover:border-slate-700 transition-colors cursor-pointer">
+            <div class="h-0.5 bg-green-500 w-full" />
+            <div class="p-4">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="text-[11px] font-bold tracking-widest text-yellow-400">STRATEGIST</span>
+                    <span class="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-400">
+                      <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+                      ACTIVE
+                    </span>
+                  </div>
+                  <p class="text-[10px] text-slate-500">Co-CEO, First Principles</p>
+                </div>
+                <div class="w-14 h-10 rounded bg-slate-800/60 flex items-center justify-center text-slate-600 text-xs">📊</div>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                Evaluated <span class="text-white font-semibold">4 strategic paths</span>. First principles analysis on growth levers; burn optimization, and runway extension.
+              </p>
+              <div class="flex gap-2">
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-400">$1.8K <span class="font-normal text-slate-500 text-[10px]">burn</span></span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-red-500/10 text-red-400">TBD <span class="font-normal text-slate-500 text-[10px]">revenue</span></span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400">340K <span class="font-normal text-slate-500 text-[10px]">runway</span></span>
+              </div>
             </div>
-            <div class="w-full bg-slate-800 rounded-full h-1.5">
-              <div class="bg-green-500 h-1.5 rounded-full" style="width: 65%"></div>
+            <!-- Vertical progress bar -->
+            <div class="absolute right-0 top-0 bottom-0 w-1 bg-slate-900">
+              <div class="absolute bottom-0 left-0 right-0 bg-yellow-500" style="height: 48%" />
+            </div>
+          </div>
+
+          <!-- HEY-SALES Card -->
+          <div class="relative flex-shrink-0 w-80 bg-[#0d1117] border border-slate-800 rounded-lg overflow-hidden hover:border-slate-700 transition-colors cursor-pointer">
+            <div class="h-0.5 bg-blue-500 w-full" />
+            <div class="p-4">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="text-[11px] font-bold tracking-widest text-orange-400">HEY-SALES</span>
+                    <span class="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
+                      ● NEW
+                    </span>
+                  </div>
+                  <p class="text-[10px] text-slate-500">AI Voice Qualification & CRM</p>
+                </div>
+                <div class="w-14 h-10 rounded bg-slate-800/60 flex items-center justify-center text-slate-600 text-xs">📞</div>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                Just deployed. Awaiting <span class="text-white font-semibold">first inbound leads</span>. BANT qualification pipeline ready. Night guarız: no calls 20:00–...
+              </p>
+              <div class="flex gap-2">
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-green-500/10 text-green-400">+5m <span class="font-normal text-slate-500 text-[10px]">speed to lead</span></span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-orange-500/10 text-orange-400">+68% <span class="font-normal text-slate-500 text-[10px]">qualify</span></span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400">+95% <span class="font-normal text-slate-500 text-[10px]">reach</span></span>
+              </div>
+            </div>
+            <div class="absolute right-0 top-0 bottom-0 w-1 bg-slate-900">
+              <div class="absolute bottom-0 left-0 right-0 bg-blue-500" style="height: 80%" />
+            </div>
+          </div>
+
+        </div>
+        <div class="mt-6 h-px bg-slate-900" />
+      </section>
+
+      <!-- COMMUNITY Group -->
+      <section class="mb-10">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-[10px] font-bold tracking-widest text-blue-400">⬡ COMMUNITY</span>
+            <span class="text-[10px] text-slate-600">Skool Engagement & Retention</span>
+          </div>
+          <span class="text-[10px] text-slate-700">1 agent</span>
+        </div>
+
+        <div class="flex gap-4 overflow-x-auto pb-2">
+          <div class="relative flex-shrink-0 w-80 bg-[#0d1117] border border-slate-800 rounded-lg overflow-hidden hover:border-slate-700 transition-colors cursor-pointer">
+            <div class="h-0.5 bg-blue-500 w-full" />
+            <div class="p-4">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="text-[11px] font-bold tracking-widest text-blue-400">COMMUNITY</span>
+                    <span class="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
+                      ● NEW
+                    </span>
+                  </div>
+                  <p class="text-[10px] text-slate-500">Skool Engagement & Retention</p>
+                </div>
+                <div class="w-14 h-10 rounded bg-slate-800/60 flex items-center justify-center text-slate-600 text-xs">👥</div>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                First live cycle completed. Learning <span class="text-white font-semibold">Skool member tracking</span> — only top 30 visible; yearly subscribers need different churn signals.
+              </p>
+              <div class="flex gap-2">
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-green-500/10 text-green-400">&gt;90% <span class="font-normal text-slate-500 text-[10px]">retention</span></span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400">+40% <span class="font-normal text-slate-500 text-[10px]">weekly active</span></span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400">+12h <span class="font-normal text-slate-500 text-[10px]">avg session</span></span>
+              </div>
+            </div>
+            <div class="absolute right-0 top-0 bottom-0 w-1 bg-slate-900">
+              <div class="absolute bottom-0 left-0 right-0 bg-blue-500" style="height: 90%" />
             </div>
           </div>
         </div>
+        <div class="mt-6 h-px bg-slate-900" />
+      </section>
 
-        <!-- Active Campaign 2 -->
-        <div class="bg-slate-900 rounded-lg border border-slate-800 p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
-            <span class="text-xs text-slate-400">ACTIVE</span>
+      <!-- MARKETING Group -->
+      <section class="mb-10">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-[10px] font-bold tracking-widest text-yellow-500">⬡ MARKETING</span>
+            <span class="text-[10px] text-slate-600">Content & Growth · Serves Both Teams</span>
           </div>
-          <h4 class="text-sm font-semibold mb-3">Campaign B</h4>
-          <div class="space-y-2">
-            <div class="flex justify-between text-xs">
-              <span>Progress</span>
-              <span class="text-slate-400">42%</span>
+          <span class="text-[10px] text-slate-700">7 agents</span>
+        </div>
+
+        <div class="flex gap-4 overflow-x-auto pb-2">
+
+          <!-- YOUTUBE Card -->
+          <div class="relative flex-shrink-0 w-72 bg-[#0d1117] border border-slate-800 rounded-lg overflow-hidden hover:border-slate-700 transition-colors cursor-pointer">
+            <div class="h-0.5 bg-red-500 w-full" />
+            <div class="p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-bold tracking-widest text-red-400">YOUTUBE</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-400 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block" />ACTIVE
+                </span>
+              </div>
+              <p class="text-[10px] text-slate-500 mb-2">Video Performance & Retention</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                TR content <span class="text-white font-semibold">+32% CTR</span>. Testing thumbnail variants. Retention drop at 4:20 mark identified.
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 text-red-400">CTR 6.2%</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-400">AVD 8:40</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400">52% ret.</span>
+              </div>
             </div>
-            <div class="w-full bg-slate-800 rounded-full h-1.5">
-              <div class="bg-blue-500 h-1.5 rounded-full" style="width: 42%"></div>
+            <div class="absolute right-0 top-0 bottom-0 w-1 bg-slate-900">
+              <div class="absolute bottom-0 left-0 right-0 bg-red-500" style="height: 62%" />
             </div>
           </div>
-        </div>
 
-        <!-- Inactive Campaign -->
-        <div class="bg-slate-900 rounded-lg border border-slate-800 p-4">
-          <div class="flex items-center justify-between mb-3">
-            <span class="w-3 h-3 bg-slate-600 rounded-full"></span>
-            <span class="text-xs text-slate-400">IDLE</span>
+          <!-- REPURPOSE Card -->
+          <div class="relative flex-shrink-0 w-72 bg-[#0d1117] border border-slate-800 rounded-lg overflow-hidden hover:border-slate-700 transition-colors cursor-pointer">
+            <div class="h-0.5 bg-purple-500 w-full" />
+            <div class="p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-bold tracking-widest text-purple-400">REPURPOSE</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-400 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block" />ACTIVE
+                </span>
+              </div>
+              <p class="text-[10px] text-slate-500 mb-2">Multi-Format Distribution</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                Converting videos → Twitter threads. <span class="text-white font-semibold">3 pending approval</span>, 2 scheduled for publish.
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400">3 pending</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">2 live</span>
+              </div>
+            </div>
+            <div class="absolute right-0 top-0 bottom-0 w-1 bg-slate-900">
+              <div class="absolute bottom-0 left-0 right-0 bg-purple-500" style="height: 40%" />
+            </div>
           </div>
-          <h4 class="text-sm font-semibold mb-3">Campaign C</h4>
-          <p class="text-xs text-slate-500">Ready to deploy</p>
-        </div>
 
-        <!-- Add Campaign Button -->
-        <div class="bg-slate-900 rounded-lg border border-slate-700 border-dashed p-4 flex items-center justify-center hover:border-slate-600 cursor-pointer transition">
-          <div class="text-center">
-            <span class="text-2xl text-slate-600 mb-2">+</span>
-            <p class="text-xs text-slate-500">Add Campaign</p>
+          <!-- TWITTER Card -->
+          <div class="relative flex-shrink-0 w-72 bg-[#0d1117] border border-slate-800 rounded-lg overflow-hidden hover:border-slate-700 transition-colors cursor-pointer">
+            <div class="h-0.5 bg-sky-500 w-full" />
+            <div class="p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-bold tracking-widest text-sky-400">TWITTER</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-400 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block" />ACTIVE
+                </span>
+              </div>
+              <p class="text-[10px] text-slate-500 mb-2">Outlier Growth & Engagement</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                <span class="text-white font-semibold">2 outlier posts</span> identified this week. Engagement rate 4.2%, impressions up 18%.
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400">4.2% eng.</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">+18% imp.</span>
+              </div>
+            </div>
+            <div class="absolute right-0 top-0 bottom-0 w-1 bg-slate-900">
+              <div class="absolute bottom-0 left-0 right-0 bg-sky-500" style="height: 55%" />
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Activities Section -->
-    <div>
-      <h2 class="text-blue-400 text-lg font-bold mb-6 flex items-center gap-2">
-        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-        ACTIVITIES
-      </h2>
+          <!-- LINKEDIN Card -->
+          <div class="relative flex-shrink-0 w-72 bg-[#0d1117] border border-slate-800 rounded-lg overflow-hidden hover:border-slate-700 transition-colors cursor-pointer">
+            <div class="h-0.5 bg-blue-600 w-full" />
+            <div class="p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-bold tracking-widest text-blue-500">LINKEDIN</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-500">IDLE</span>
+              </div>
+              <p class="text-[10px] text-slate-500 mb-2">Network & Content Growth</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                <span class="text-white font-semibold">+120 followers</span> this month. Avg. 28 comments/post. Long-form outperforming short.
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400">+120 follow</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">28 cmnt/post</span>
+              </div>
+            </div>
+            <div class="absolute right-0 top-0 bottom-0 w-1 bg-slate-900">
+              <div class="absolute bottom-0 left-0 right-0 bg-blue-600" style="height: 35%" />
+            </div>
+          </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-slate-900 rounded-lg border border-slate-800 p-4">
-          <div class="flex justify-between items-start mb-3">
-            <h4 class="font-semibold">Web Scraper #1</h4>
-            <span class="px-2 py-1 bg-green-500 bg-opacity-20 text-green-400 text-xs rounded">RUNNING</span>
+          <!-- VISUALS Card -->
+          <div class="relative flex-shrink-0 w-72 bg-[#0d1117] border border-slate-800 rounded-lg overflow-hidden hover:border-slate-700 transition-colors cursor-pointer">
+            <div class="h-0.5 bg-pink-500 w-full" />
+            <div class="p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-bold tracking-widest text-pink-400">VISUALS</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-400 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block" />ACTIVE
+                </span>
+              </div>
+              <p class="text-[10px] text-slate-500 mb-2">SaaS Demo Animations & Metrics</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                <span class="text-white font-semibold">4 animations</span> in pipeline. Approval rate 75%. Dashboard graphs delivered.
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-pink-500/10 text-pink-400">4 in pipe</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">75% appr.</span>
+              </div>
+            </div>
+            <div class="absolute right-0 top-0 bottom-0 w-1 bg-slate-900">
+              <div class="absolute bottom-0 left-0 right-0 bg-pink-500" style="height: 75%" />
+            </div>
           </div>
-          <div class="text-sm text-slate-400 mb-3">Mission: DataCollection</div>
-          <div class="flex gap-2">
-            <button class="px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 rounded transition">Pause</button>
-            <button class="px-3 py-1 text-xs bg-red-500 bg-opacity-20 text-red-400 hover:bg-opacity-30 rounded transition">Stop</button>
-          </div>
-        </div>
 
-        <div class="bg-slate-900 rounded-lg border border-slate-800 p-4">
-          <div class="flex justify-between items-start mb-3">
-            <h4 class="font-semibold">Ad Publisher #2</h4>
-            <span class="px-2 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 text-xs rounded">IDLE</span>
+          <!-- GRAM BETA Card -->
+          <div class="relative flex-shrink-0 w-72 bg-[#0d1117] border border-slate-800 rounded-lg overflow-hidden hover:border-slate-700 transition-colors cursor-pointer">
+            <div class="h-0.5 bg-rose-500 w-full" />
+            <div class="p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-bold tracking-widest text-rose-400">GRAM - BETA ADD</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400">● NEW</span>
+              </div>
+              <p class="text-[10px] text-slate-500 mb-2">Instagram Beta Growth</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                Audience research phase. Testing <span class="text-white font-semibold">reels-first</span> strategy. ICP mapping in progress.
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400">BETA</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">ICP research</span>
+              </div>
+            </div>
+            <div class="absolute right-0 top-0 bottom-0 w-1 bg-slate-900">
+              <div class="absolute bottom-0 left-0 right-0 bg-rose-500" style="height: 15%" />
+            </div>
           </div>
-          <div class="text-sm text-slate-400 mb-3">Mission: AdManagement</div>
-          <div class="flex gap-2">
-            <button class="px-3 py-1 text-xs bg-green-500 bg-opacity-20 text-green-400 hover:bg-opacity-30 rounded transition">Start</button>
-            <button class="px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 rounded transition">Config</button>
-          </div>
+
         </div>
-      </div>
-    </div>
+      </section>
+
+    </main>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
-const router = useRouter();
+const activeTab = ref('heycalli');
+const currentTime = ref('');
+let clockInterval: ReturnType<typeof setInterval>;
+
+const navTabs = [
+  { id: 'heycalli',  label: 'HEYCALLI',  color: 'bg-yellow-400' },
+  { id: 'community', label: 'COMMUNITY', color: 'bg-blue-400' },
+  { id: 'marketing', label: 'MARKETING', color: 'bg-orange-400' },
+  { id: 'operations',label: 'OPERATIONS',color: 'bg-slate-600' },
+];
+
+const totalAgents = computed(() => 11);
+const activeAgents = computed(() => 8);
+
+function updateClock() {
+  currentTime.value = new Date().toLocaleTimeString('tr-TR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+}
 
 onMounted(() => {
-  // Check auth and redirect to login if needed
-  const isAuth = localStorage.getItem('auth_token');
-  if (!isAuth) {
-    router.push('/login');
-  }
+  updateClock();
+  clockInterval = setInterval(updateClock, 1000);
+});
+
+onUnmounted(() => {
+  clearInterval(clockInterval);
 });
 </script>
 
 <style scoped>
-/* Dark theme optimizations */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.5);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.7);
-}
+::-webkit-scrollbar { height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
 </style>
