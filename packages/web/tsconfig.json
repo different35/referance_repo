@@ -10,7 +10,9 @@
       "@/*": ["./src/*"]
     },
     "useDefineForClassFields": true,
-    "allowJs": false
+    "allowJs": false,
+    "skipLibCheck": true,
+    "noEmit": true
   },
   "include": ["src/**/*", "src/**/*.vue", "vite.config.ts"],
   "exclude": ["node_modules", "dist"]
