@@ -1,0 +1,20 @@
+{
+  "name": "@swarm/agents",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --loader ts-node/esm src/index.ts",
+    "run:orchestrator": "node --loader ts-node/esm src/orchestrator.ts",
+    "run:schema": "node --loader ts-node/esm src/agents/schema.agent.ts",
+    "run:router": "node --loader ts-node/esm src/agents/router.agent.ts",
+    "run:component": "node --loader ts-node/esm src/agents/component.agent.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
+  }
+}

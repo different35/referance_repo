@@ -86,5 +86,78 @@ export const auditLogs = sqliteTable('audit_logs', {
   at: integer('at', { mode: 'timestamp_ms' }).notNull().default(now),
 });
 
+// ─────────────────────────────────────────────────────────
+// Domain tabloları (Phase 2)
+// ─────────────────────────────────────────────────────────
+export const missions = sqliteTable('missions', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  configSchema: text('config_schema', { mode: 'json' }).$type<Record<string, unknown>>(),
+  defaultConfig: text('default_config', { mode: 'json' }).$type<Record<string, unknown>>(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now),
+});
+
+export const proxyProfiles = sqliteTable('proxy_profiles', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  protocol: text('protocol').notNull(),
+  host: text('host').notNull(),
+  port: integer('port').notNull(),
+  username: text('username'),
+  passwordEnc: text('password_enc'),
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now),
+});
+
+export const activities = sqliteTable('activities', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  state: text('state', {
+    enum: ['idle', 'starting', 'running', 'stopping', 'stopped', 'error'],
+  }).notNull().default('idle'),
+  missionId: text('mission_id').notNull().references(() => missions.id, { onDelete: 'cascade' }),
+  proxyProfileId: text('proxy_profile_id').references(() => proxyProfiles.id, { onDelete: 'set null' }),
+  error: text('error'),
+  startedAt: integer('started_at', { mode: 'timestamp_ms' }),
+  stoppedAt: integer('stopped_at', { mode: 'timestamp_ms' }),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now),
+});
+
+export const ads = sqliteTable('ads', {
+  id: text('id').primaryKey(),
+  state: text('state', {
+    enum: ['draft', 'generating', 'review', 'policy-checking', 'approved', 'publishing', 'published'],
+  }).notNull().default('draft'),
+  platform: text('platform').notNull(),
+  format: text('format').notNull(),
+  headline: text('headline'),
+  body: text('body'),
+  cta: text('cta'),
+  previewHtml: text('preview_html'),
+  policyScore: integer('policy_score'),
+  policyIssues: text('policy_issues', { mode: 'json' }).$type<Array<{ issue: string; severity: string }>>(),
+  roiEstimate: text('roi_estimate', { mode: 'json' }).$type<{ cpc: number; ctr: number; conversions: number }>(),
+  publishedUrl: text('published_url'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now),
+});
+
+export const customerVisits = sqliteTable('customer_visits', {
+  id: text('id').primaryKey(),
+  customerName: text('customer_name').notNull(),
+  locationLat: text('location_lat'),
+  locationLng: text('location_lng'),
+  startedAt: integer('started_at', { mode: 'timestamp_ms' }).notNull().default(now),
+  endedAt: integer('ended_at', { mode: 'timestamp_ms' }),
+  notes: text('notes'),
+  photoPaths: text('photo_paths', { mode: 'json' }).$type<string[]>(),
+  recordedByUserId: text('recorded_by_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now),
+});
+
 // Sonraki phase'lerde eklenecek:
-// - missions, activities, proxy_profiles, ads, customer_visits, push_subscriptions
+// - push_subscriptions, vscode_bridge_sessions, claude_cli_logs
