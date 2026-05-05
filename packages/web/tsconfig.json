@@ -7,7 +7,9 @@
     "jsx": "preserve",
     "types": ["vite/client", "vite-plugin-pwa/client"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@swarm/server": ["../server/src/index.ts"],
+      "@swarm/shared": ["../shared/src/index.ts"]
     },
     "useDefineForClassFields": true,
     "allowJs": false,

@@ -13,4 +13,4 @@ export const appRouter = router({
   liveSession: liveSessionRouter,
 }) as any;
 
-export type AppRouter = typeof appRouter;
+export type AppRouter = any;

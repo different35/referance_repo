@@ -11,8 +11,10 @@ import { trpcServer } from '@hono/trpc-server';
 import { getEnv } from './env.js';
 import { logger } from './lib/logger.js';
 import { auth } from './auth/auth.js';
-import { appRouter } from './trpc/routers/_app.js';
+import { appRouter, type AppRouter } from './trpc/routers/_app.js';
 import { createContext } from './trpc/context.js';
+
+export type { AppRouter };
 
 const env = getEnv();
 const app = new Hono();

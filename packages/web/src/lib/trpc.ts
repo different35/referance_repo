@@ -1,9 +1,10 @@
 import { createTRPCProxyClient, httpBatchLink, wsLink, splitLink } from '@trpc/client';
+import type { AppRouter } from '@swarm/server';
 
-export const trpc = createTRPCProxyClient<any>({
+export const trpc = createTRPCProxyClient<AppRouter>({
   links: [
     splitLink({
-      condition(op: any) {
+      condition(op) {
         return op.type === 'subscription';
       },
       true: wsLink({
@@ -11,7 +12,7 @@ export const trpc = createTRPCProxyClient<any>({
       }),
       false: httpBatchLink({
         url: 'http://localhost:3000/trpc',
-      } as any),
+      }),
     }),
   ],
 });
