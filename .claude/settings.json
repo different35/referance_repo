@@ -1,0 +1,56 @@
+{
+  "model": "claude-opus-4-7",
+  "permissions": {
+    "allow": [
+      "Bash(npm run*)",
+      "Bash(npm install*)",
+      "Bash(pnpm *)",
+      "Bash(node *)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(git branch*)",
+      "Bash(git checkout*)",
+      "Bash(mkdir -p*)",
+      "Bash(ls*)",
+      "Bash(find . *)",
+      "Bash(cat *)",
+      "Bash(echo *)",
+      "Read",
+      "Write",
+      "Edit"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(DROP TABLE*)",
+      "Bash(git push --force origin main)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /home/user/referance_repo/.claude/hooks/post-write.js"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /home/user/referance_repo/.claude/hooks/session-summary.js"
+          }
+        ]
+      }
+    ]
+  }
+}
