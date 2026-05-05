@@ -8,6 +8,14 @@ build/
 out/
 *.tsbuildinfo
 
+# Vue/Vite compiled artifacts (should NOT be committed)
+packages/web/src/**/*.d.ts
+packages/web/src/**/*.js
+packages/web/src/**/*.js.map
+packages/web/vite.config.d.ts
+packages/web/vite.config.js
+packages/web/vite.config.js.map
+
 # Environment
 .env
 .env.local
