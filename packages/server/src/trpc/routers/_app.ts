@@ -11,6 +11,6 @@ export const appRouter = router({
   mission: missionRouter,
   proxy: proxyRouter,
   liveSession: liveSessionRouter,
-});
+}) as any;
 
 export type AppRouter = typeof appRouter;
