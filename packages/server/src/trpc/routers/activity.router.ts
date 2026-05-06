@@ -46,10 +46,29 @@ export const activityRouter = router({
     }),
 
   start: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(
+      z.object({
+        id: z.string(),
+        objective: z.string().optional(),
+        context: z.record(z.unknown()).optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const service = new ActivityService(ctx.db);
       const activity = await service.startActivity(input.id);
+
+      // Transition to running after starting
+      await service.markRunning(input.id);
+
+      // Execute agent task asynchronously (don't block response)
+      if (input.objective) {
+        service
+          .runAgentTask(input.id, input.objective, input.context)
+          .catch((err) => {
+            console.error(`Agent task failed for activity ${input.id}:`, err);
+          });
+      }
+
       return { success: true, activity };
     }),
 

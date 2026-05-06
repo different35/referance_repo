@@ -5,6 +5,7 @@
  * 1. FSM state transitions (validate)
  * 2. Database updates
  * 3. EventEmitter pub/sub
+ * 4. Agent execution (CLAUDE CALLS)
  *
  * Used by tRPC routers and subscriptions
  */
@@ -14,6 +15,7 @@ import type { DbClient } from '../db/client.js';
 import * as schema from '../db/schema.js';
 import { transition, isValidState, type ActivityState } from '../state-machines/activity.fsm.js';
 import { emitStateChange, emitOutput } from '../ws/activity-events.js';
+import { getAgentExecutor } from './agent-executor.service.js';
 
 export class ActivityService {
   constructor(private db: DbClient) {}
@@ -242,5 +244,53 @@ export class ActivityService {
    */
   async deleteActivity(activityId: string) {
     await this.db.delete(schema.activities).where(eq(schema.activities.id, activityId));
+  }
+
+  /**
+   * Run agent task - EXECUTES CLAUDE
+   * Called when activity transitions to running state
+   */
+  async runAgentTask(
+    activityId: string,
+    objective: string,
+    context?: Record<string, unknown>
+  ) {
+    const activity = await this.getActivity(activityId);
+    if (!activity) throw new Error(`Activity ${activityId} not found`);
+
+    const executor = getAgentExecutor();
+
+    try {
+      // Execute Claude task
+      const result = await executor.executeTask({
+        activityId,
+        agentId: activity.name, // Activity name becomes agent ID
+        missionName: activity.name,
+        objective,
+        context: context || null,
+      });
+
+      // Emit result to client
+      emitOutput(activityId, `\n=== AGENT RESULT ===\n`);
+      emitOutput(activityId, `Success: ${result.success}\n`);
+      emitOutput(activityId, `Duration: ${result.duration}ms\n`);
+      emitOutput(activityId, `Tokens: ${result.tokenUsage.input} input, ${result.tokenUsage.output} output\n`);
+      emitOutput(activityId, `\n--- Output ---\n${result.output}\n`);
+
+      if (result.thinking.length > 0) {
+        emitOutput(activityId, `\n--- Thinking Process ---\n${result.thinking.join('\n')}\n`);
+      }
+
+      if (result.error) {
+        emitOutput(activityId, `\n--- Error ---\n${result.error}\n`);
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+      emitOutput(activityId, `\n❌ Agent execution failed: ${errorMessage}\n`);
+      await this.setError(activityId, errorMessage);
+      throw error;
+    }
   }
 }
