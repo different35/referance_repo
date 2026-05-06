@@ -404,10 +404,10 @@ const StateBadge = defineComponent({
     };
     return () => {
       const s = p.state ?? 'idle';
-      const b = map[s] || map.idle;
-      return h('span', { class: `flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${b.cls}` }, [
+      const b = map[s as keyof typeof map] ?? map.idle;
+      return h('span', { class: `flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${(b ?? map.idle).cls}` }, [
         s === 'running' ? h('span', { class: 'w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block' }) : null,
-        b.text,
+        (b ?? map.idle).text,
       ]);
     };
   },

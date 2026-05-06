@@ -67,4 +67,4 @@ export const liveSessionRouter = router({
       service.emitOutput(input.activityId, input.message);
       return { success: true };
     }),
-}) as any;
+});

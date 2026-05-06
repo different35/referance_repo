@@ -13,6 +13,6 @@ export const appRouter = router({
   proxy: proxyRouter,
   liveSession: liveSessionRouter,
   agent: agentRouter,
-}) as any;
+});
 
-export type AppRouter = any;
+export type AppRouter = typeof appRouter;
