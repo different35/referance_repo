@@ -7,9 +7,9 @@
 
 export interface ChannelConfig {
   platform: "google_ads" | "facebook" | "linkedin" | "twitter" | "tiktok";
-  apiKey?: string;
-  accessToken?: string;
-  accountId?: string;
+  apiKey: string | null;
+  accessToken: string | null;
+  accountId: string | null;
   isConfigured: boolean;
 }
 
@@ -21,9 +21,9 @@ export interface CampaignAction {
     | "pause_campaign"
     | "enable_campaign"
     | "adjust_targeting";
-  campaignId?: string;
+  campaignId: string | null;
   parameters: Record<string, unknown>;
-  estimatedCost?: number;
+  estimatedCost: number | null;
   requiresApproval: boolean;
 }
 
@@ -39,33 +39,41 @@ class MultiChannelToolkit {
     const channels: ChannelConfig[] = [
       {
         platform: "google_ads",
-        apiKey: process.env.GOOGLE_ADS_API_KEY,
+        apiKey: process.env.GOOGLE_ADS_API_KEY || null,
+        accessToken: null,
+        accountId: null,
         isConfigured: !!process.env.GOOGLE_ADS_API_KEY,
       },
       {
         platform: "facebook",
-        accessToken: process.env.FACEBOOK_ACCESS_TOKEN,
-        accountId: process.env.FACEBOOK_AD_ACCOUNT_ID,
+        apiKey: null,
+        accessToken: process.env.FACEBOOK_ACCESS_TOKEN || null,
+        accountId: process.env.FACEBOOK_AD_ACCOUNT_ID || null,
         isConfigured:
           !!process.env.FACEBOOK_ACCESS_TOKEN &&
           !!process.env.FACEBOOK_AD_ACCOUNT_ID,
       },
       {
         platform: "linkedin",
-        accessToken: process.env.LINKEDIN_ACCESS_TOKEN,
-        accountId: process.env.LINKEDIN_AD_ACCOUNT_ID,
+        apiKey: null,
+        accessToken: process.env.LINKEDIN_ACCESS_TOKEN || null,
+        accountId: process.env.LINKEDIN_AD_ACCOUNT_ID || null,
         isConfigured:
           !!process.env.LINKEDIN_ACCESS_TOKEN &&
           !!process.env.LINKEDIN_AD_ACCOUNT_ID,
       },
       {
         platform: "twitter",
-        apiKey: process.env.TWITTER_API_KEY,
+        apiKey: process.env.TWITTER_API_KEY || null,
+        accessToken: null,
+        accountId: null,
         isConfigured: !!process.env.TWITTER_API_KEY,
       },
       {
         platform: "tiktok",
-        accessToken: process.env.TIKTOK_ACCESS_TOKEN,
+        apiKey: null,
+        accessToken: process.env.TIKTOK_ACCESS_TOKEN || null,
+        accountId: null,
         isConfigured: !!process.env.TIKTOK_ACCESS_TOKEN,
       },
     ];

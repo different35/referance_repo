@@ -42,7 +42,7 @@ export type AgentEvent =
   | { type: "ERROR"; error: string }
   | { type: "RESET" };
 
-export const agentMachine = createMachine<AgentContext, AgentEvent>({
+export const agentMachine = createMachine<AgentContext, AgentEvent, any>({
   id: "agent",
   initial: "idle",
   context: {

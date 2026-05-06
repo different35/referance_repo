@@ -310,7 +310,7 @@ export const agentRouter = router({
           "enable_campaign",
           "adjust_targeting",
         ]),
-        campaignId: z.string().optional(),
+        campaignId: z.string().nullable(),
         parameters: z.record(z.unknown()),
         approvalId: z.string().optional(),
       })
@@ -332,6 +332,7 @@ export const agentRouter = router({
         action: input.action as any,
         campaignId: input.campaignId,
         parameters: input.parameters,
+        estimatedCost: null,
         requiresApproval: !!input.approvalId,
       });
 

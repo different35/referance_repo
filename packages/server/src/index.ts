@@ -68,16 +68,16 @@ app.get('/events/agents/:agentId', (c) => {
 
         // Send heartbeat
         const heartbeat = setInterval(() => {
-          controller.enqueue(
-            new TextEncoder().encode(': heartbeat\n\n')
-          );
+          try {
+            controller.enqueue(
+              new TextEncoder().encode(': heartbeat\n\n')
+            );
+          } catch (e) {
+            clearInterval(heartbeat);
+            cleanup();
+            controller.close();
+          }
         }, 30000);
-
-        c.req.raw.addEventListener('close', () => {
-          cleanup();
-          clearInterval(heartbeat);
-          controller.close();
-        });
       },
     }),
     {
@@ -105,16 +105,16 @@ app.get('/events', (c) => {
 
         // Send heartbeat
         const heartbeat = setInterval(() => {
-          controller.enqueue(
-            new TextEncoder().encode(': heartbeat\n\n')
-          );
+          try {
+            controller.enqueue(
+              new TextEncoder().encode(': heartbeat\n\n')
+            );
+          } catch (e) {
+            clearInterval(heartbeat);
+            cleanup();
+            controller.close();
+          }
         }, 30000);
-
-        c.req.raw.addEventListener('close', () => {
-          cleanup();
-          clearInterval(heartbeat);
-          controller.close();
-        });
       },
     }),
     {
