@@ -11,6 +11,8 @@ import {
   searchSimilarCampaigns,
   getAllCampaignMemories,
 } from "../../agents/vector-store.js";
+import { approvalManager } from "../../agents/approval-manager.js";
+import { multiChannelToolkit } from "../../agents/multi-channel-tools.js";
 
 export const agentRouter = router({
   // Initialize agent infrastructure
@@ -185,4 +187,154 @@ export const agentRouter = router({
       };
     }
   }),
+
+  // ────────────────────────────────────────────────────────
+  // Human-in-the-Loop Approval System
+  // ────────────────────────────────────────────────────────
+
+  // Request approval for critical action
+  requestApproval: publicProcedure
+    .input(
+      z.object({
+        taskId: z.string(),
+        agentId: z.string(),
+        action: z.enum([
+          "publish_campaign",
+          "increase_budget",
+          "change_targeting",
+          "deploy",
+        ]),
+        description: z.string(),
+        proposedChanges: z.record(z.unknown()),
+        riskLevel: z.enum(["low", "medium", "high", "critical"]).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const request = approvalManager.createApprovalRequest(
+        input.taskId,
+        input.agentId,
+        input.action,
+        input.description,
+        input.proposedChanges,
+        input.riskLevel
+      );
+
+      return {
+        success: true,
+        approvalId: request.id,
+        expiresAt: request.expiresAt,
+      };
+    }),
+
+  // Get pending approvals
+  getPendingApprovals: publicProcedure.query(async () => {
+    const requests = approvalManager.getPendingRequests();
+    return {
+      pending: requests,
+      count: requests.length,
+    };
+  }),
+
+  // Approve a request
+  approveRequest: publicProcedure
+    .input(
+      z.object({
+        requestId: z.string(),
+        approverNote: z.string(),
+        approver: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const success = approvalManager.approveRequest(
+        input.requestId,
+        input.approverNote,
+        input.approver
+      );
+
+      return {
+        success,
+        message: success ? "Approval granted" : "Approval failed",
+      };
+    }),
+
+  // Reject a request
+  rejectRequest: publicProcedure
+    .input(
+      z.object({
+        requestId: z.string(),
+        reason: z.string(),
+        approver: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const success = approvalManager.rejectRequest(
+        input.requestId,
+        input.reason,
+        input.approver
+      );
+
+      return {
+        success,
+        message: success ? "Request rejected" : "Rejection failed",
+      };
+    }),
+
+  // ────────────────────────────────────────────────────────
+  // Multi-Channel Marketing Tools
+  // ────────────────────────────────────────────────────────
+
+  // Get configured channels
+  getChannels: publicProcedure.query(async () => {
+    const channels = multiChannelToolkit.getConfiguredChannels();
+    return {
+      configured: channels,
+      count: channels.length,
+    };
+  }),
+
+  // Execute campaign action on specific platform
+  executeChannelAction: publicProcedure
+    .input(
+      z.object({
+        platform: z.enum([
+          "google_ads",
+          "facebook",
+          "linkedin",
+          "twitter",
+          "tiktok",
+        ]),
+        action: z.enum([
+          "create_campaign",
+          "update_budget",
+          "pause_campaign",
+          "enable_campaign",
+          "adjust_targeting",
+        ]),
+        campaignId: z.string().optional(),
+        parameters: z.record(z.unknown()),
+        approvalId: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      // Check if approval is required and granted
+      if (
+        input.approvalId &&
+        !approvalManager.canExecute(input.approvalId)
+      ) {
+        return {
+          success: false,
+          error: "Action not approved",
+        };
+      }
+
+      const result = await multiChannelToolkit.executeAction({
+        platform: input.platform,
+        action: input.action as any,
+        campaignId: input.campaignId,
+        parameters: input.parameters,
+        requiresApproval: !!input.approvalId,
+      });
+
+      return result;
+    }),
 });
