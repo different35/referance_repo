@@ -150,7 +150,7 @@ class ApprovalManager {
 
   canExecute(requestId: string): boolean {
     const request = this.requests.get(requestId);
-    return request?.status === "approved" ?? false;
+    return request ? request.status === "approved" : false;
   }
 }
 

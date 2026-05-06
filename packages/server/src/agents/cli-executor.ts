@@ -35,7 +35,7 @@ export class CLIExecutor {
   ]);
 
   isCommandAllowed(command: string): boolean {
-    const baseCommand = command.split(" ")[0];
+    const baseCommand = command.split(" ")[0] || "";
 
     if (this.blacklist.has(baseCommand)) {
       return false;
@@ -62,26 +62,36 @@ export class CLIExecutor {
     }
 
     try {
-      const stdout = execSync(command, {
+      const result = execSync(command, {
         timeout,
         encoding: "utf-8",
         stdio: ["pipe", "pipe", "pipe"],
-      }) as string;
+      });
+
+      const stdout = typeof result === "string" ? result : "";
 
       return {
         command,
-        stdout: stdout || "",
+        stdout,
         stderr: "",
         exitCode: 0,
         duration: Date.now() - startTime,
         success: true,
       };
     } catch (error: any) {
+      const stdout = typeof error?.stdout === "string" ? error.stdout : "";
+      const stderr =
+        typeof error?.stderr === "string"
+          ? error.stderr
+          : typeof error?.message === "string"
+            ? error.message
+            : "";
+
       return {
         command,
-        stdout: (error.stdout as string) || "",
-        stderr: (error.stderr as string) || (error.message as string) || "",
-        exitCode: error.status || 1,
+        stdout,
+        stderr,
+        exitCode: error?.status || 1,
         duration: Date.now() - startTime,
         success: false,
       };

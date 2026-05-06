@@ -42,10 +42,10 @@ export type AgentEvent =
   | { type: "ERROR"; error: string }
   | { type: "RESET" };
 
-export const agentMachine = createMachine<AgentContext, AgentEvent, any>({
-  id: "agent",
-  initial: "idle",
-  context: {
+export const agentMachine = createMachine({
+    id: "agent",
+    initial: "idle" as const,
+    context: {
     agentId: "",
     taskId: "",
     input: "",
@@ -63,12 +63,11 @@ export const agentMachine = createMachine<AgentContext, AgentEvent, any>({
         START: {
           target: "thinking",
           actions: assign(
-            (ctx, event) => {
-              const startEvent = event as any;
+            (_ctx, event: any) => {
               return {
                 taskId: `task-${Date.now()}`,
-                input: startEvent.input || "",
-                agentId: startEvent.agentId || "",
+                input: event.input || "",
+                agentId: event.agentId || "",
                 startedAt: Date.now(),
               };
             }
@@ -80,19 +79,17 @@ export const agentMachine = createMachine<AgentContext, AgentEvent, any>({
       on: {
         THINKING_COMPLETE: {
           target: "researching",
-          actions: assign((ctx, event) => {
-            const thinkEvent = event as any;
+          actions: assign((_ctx, event: any) => {
             return {
-              thoughts: thinkEvent.thoughts || [],
+              thoughts: event.thoughts || [],
             };
           }),
         },
         ERROR: {
           target: "error",
-          actions: assign((ctx, event) => {
-            const errEvent = event as any;
+          actions: assign((_ctx, event: any) => {
             return {
-              error: errEvent.error || "Unknown error",
+              error: event.error || "Unknown error",
             };
           }),
         },
@@ -102,13 +99,12 @@ export const agentMachine = createMachine<AgentContext, AgentEvent, any>({
       on: {
         RESEARCH_COMPLETE: {
           target: "writing",
-          actions: assign((ctx, event) => {
-            const resEvent = event as any;
+          actions: assign((_ctx, event: any) => {
             return {
               researchSummary: {
-                notebookSourceId: resEvent.notebookSourceId,
-                summary: resEvent.summary,
-                cliCommandsExecuted: resEvent.cliCommands || [],
+                notebookSourceId: event.notebookSourceId,
+                summary: event.summary,
+                cliCommandsExecuted: event.cliCommands || [],
                 timestamp: Date.now(),
               },
             };
@@ -129,10 +125,9 @@ export const agentMachine = createMachine<AgentContext, AgentEvent, any>({
       on: {
         OUTPUT_READY: {
           target: "awaitingApproval",
-          actions: assign((ctx, event) => {
-            const outEvent = event as any;
+          actions: assign((_ctx, event: any) => {
             return {
-              output: outEvent.output || "",
+              output: event.output || "",
             };
           }),
         },
@@ -151,17 +146,25 @@ export const agentMachine = createMachine<AgentContext, AgentEvent, any>({
       on: {
         APPROVE: {
           target: "completed",
-          actions: assign({
-            approvalStatus: "approved",
-            completedAt: () => Date.now(),
-          }),
+          actions: [
+            assign({
+              approvalStatus: "approved" as const,
+            }),
+            assign({
+              completedAt: Date.now(),
+            }),
+          ],
         },
         REJECT: {
           target: "rejected",
-          actions: assign({
-            approvalStatus: "rejected",
-            completedAt: () => Date.now(),
-          }),
+          actions: [
+            assign({
+              approvalStatus: "rejected" as const,
+            }),
+            assign({
+              completedAt: Date.now(),
+            }),
+          ],
         },
       },
     },
@@ -175,4 +178,4 @@ export const agentMachine = createMachine<AgentContext, AgentEvent, any>({
       type: "final",
     },
   },
-});
+} as any);

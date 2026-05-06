@@ -128,9 +128,10 @@ Think aloud about your approach. What CLI commands or data do you need?`;
       ],
     });
 
+    const thinkingContent = thinkingResponse.content[0];
     const thinkingText =
-      thinkingResponse.content[0].type === "text"
-        ? thinkingResponse.content[0].text
+      thinkingContent && thinkingContent.type === "text"
+        ? (thinkingContent as any).text
         : "";
 
     thoughts.push(thinkingText);
@@ -159,9 +160,10 @@ Respond with a JSON object containing:
       messages: this.conversationHistory,
     });
 
+    const researchContent = researchResponse.content[0];
     const researchText =
-      researchResponse.content[0].type === "text"
-        ? researchResponse.content[0].text
+      researchContent && researchContent.type === "text"
+        ? (researchContent as any).text
         : "";
 
     // Parse and execute CLI commands
@@ -220,9 +222,10 @@ Respond with a JSON object containing:
       messages: this.conversationHistory,
     });
 
+    const finalContent = finalResponse.content[0];
     const outputText =
-      finalResponse.content[0].type === "text"
-        ? finalResponse.content[0].text
+      finalContent && finalContent.type === "text"
+        ? (finalContent as any).text
         : "";
 
     this.conversationHistory.push({
