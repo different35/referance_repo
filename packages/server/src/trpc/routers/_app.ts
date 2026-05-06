@@ -4,6 +4,7 @@ import { activityRouter } from './activity.router.js';
 import { missionRouter } from './mission.router.js';
 import { proxyRouter } from './proxy.router.js';
 import { liveSessionRouter } from './live-session.router.js';
+import { agentRouter } from './agent.router.js';
 
 export const appRouter = router({
   auth: authRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   mission: missionRouter,
   proxy: proxyRouter,
   liveSession: liveSessionRouter,
+  agent: agentRouter,
 }) as any;
 
 export type AppRouter = any;

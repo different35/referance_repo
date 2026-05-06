@@ -13,6 +13,7 @@ import { logger } from './lib/logger.js';
 import { auth } from './auth/auth.js';
 import { appRouter, type AppRouter } from './trpc/routers/_app.js';
 import { createContext } from './trpc/context.js';
+import { agentEventBus } from './agents/event-emitter.js';
 
 export type { AppRouter };
 
@@ -49,6 +50,82 @@ app.use(
       createContext(c) as unknown as Promise<Record<string, unknown>>,
   })
 );
+
+// ── Agent Event Stream (SSE) ────────────────────────────
+app.get('/events/agents/:agentId', (c) => {
+  const agentId = c.req.param('agentId');
+
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        const cleanup = agentEventBus.subscribeToAgent(agentId, (event) => {
+          controller.enqueue(
+            new TextEncoder().encode(
+              `data: ${JSON.stringify(event)}\n\n`
+            )
+          );
+        });
+
+        // Send heartbeat
+        const heartbeat = setInterval(() => {
+          controller.enqueue(
+            new TextEncoder().encode(': heartbeat\n\n')
+          );
+        }, 30000);
+
+        c.req.raw.addEventListener('close', () => {
+          cleanup();
+          clearInterval(heartbeat);
+          controller.close();
+        });
+      },
+    }),
+    {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    }
+  );
+});
+
+// ── Agent Event Stream (All events) ──────────────────────
+app.get('/events', (c) => {
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        const cleanup = agentEventBus.subscribeToAll((event) => {
+          controller.enqueue(
+            new TextEncoder().encode(
+              `data: ${JSON.stringify(event)}\n\n`
+            )
+          );
+        });
+
+        // Send heartbeat
+        const heartbeat = setInterval(() => {
+          controller.enqueue(
+            new TextEncoder().encode(': heartbeat\n\n')
+          );
+        }, 30000);
+
+        c.req.raw.addEventListener('close', () => {
+          cleanup();
+          clearInterval(heartbeat);
+          controller.close();
+        });
+      },
+    }),
+    {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    }
+  );
+});
 
 app.get('/health', (c) =>
   c.json({
