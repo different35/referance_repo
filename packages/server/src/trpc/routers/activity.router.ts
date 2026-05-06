@@ -51,6 +51,7 @@ export const activityRouter = router({
         id: z.string(),
         objective: z.string().optional(),
         context: z.record(z.unknown()).optional(),
+        useLocal: z.boolean().optional().default(false),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -63,7 +64,12 @@ export const activityRouter = router({
       // Execute agent task asynchronously (don't block response)
       if (input.objective) {
         service
-          .runAgentTask(input.id, input.objective, input.context)
+          .runAgentTask(
+            input.id,
+            input.objective,
+            input.context,
+            input.useLocal
+          )
           .catch((err) => {
             console.error(`Agent task failed for activity ${input.id}:`, err);
           });

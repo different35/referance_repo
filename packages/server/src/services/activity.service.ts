@@ -16,6 +16,7 @@ import * as schema from '../db/schema.js';
 import { transition, isValidState, type ActivityState } from '../state-machines/activity.fsm.js';
 import { emitStateChange, emitOutput } from '../ws/activity-events.js';
 import { getAgentExecutor } from './agent-executor.service.js';
+import { getLocalAgentService } from './local-agent.service.js';
 
 export class ActivityService {
   constructor(private db: DbClient) {}
@@ -247,45 +248,104 @@ export class ActivityService {
   }
 
   /**
-   * Run agent task - EXECUTES CLAUDE
+   * Run agent task - EXECUTES CLAUDE or LOCAL MODEL
    * Called when activity transitions to running state
    */
   async runAgentTask(
     activityId: string,
     objective: string,
-    context?: Record<string, unknown>
+    context?: Record<string, unknown>,
+    useLocal: boolean = false
   ) {
     const activity = await this.getActivity(activityId);
     if (!activity) throw new Error(`Activity ${activityId} not found`);
 
-    const executor = getAgentExecutor();
-
     try {
-      // Execute Claude task
-      const result = await executor.executeTask({
-        activityId,
-        agentId: activity.name, // Activity name becomes agent ID
-        missionName: activity.name,
-        objective,
-        context: context || null,
-      });
+      if (useLocal) {
+        // Use LM Studio (local model)
+        const localService = getLocalAgentService();
+        const isAvailable = await localService.isAvailable();
 
-      // Emit result to client
-      emitOutput(activityId, `\n=== AGENT RESULT ===\n`);
-      emitOutput(activityId, `Success: ${result.success}\n`);
-      emitOutput(activityId, `Duration: ${result.duration}ms\n`);
-      emitOutput(activityId, `Tokens: ${result.tokenUsage.input} input, ${result.tokenUsage.output} output\n`);
-      emitOutput(activityId, `\n--- Output ---\n${result.output}\n`);
+        if (!isAvailable) {
+          emitOutput(
+            activityId,
+            `❌ LM Studio not available at http://localhost:1234\n`
+          );
+          await this.setError(
+            activityId,
+            "LM Studio unavailable - ensure LM Studio is running on port 1234"
+          );
+          return;
+        }
 
-      if (result.thinking.length > 0) {
-        emitOutput(activityId, `\n--- Thinking Process ---\n${result.thinking.join('\n')}\n`);
+        emitOutput(
+          activityId,
+          `🚀 Using LM Studio local model\n\nObjective: ${objective}\n\n`
+        );
+
+        const result = await localService.executeTask(
+          {
+            activityId,
+            agentId: activity.name,
+            objective,
+          },
+          (chunk: string) => {
+            // Stream chunks to client in real-time
+            emitOutput(activityId, chunk);
+          }
+        );
+
+        if (result.success) {
+          emitOutput(
+            activityId,
+            `\n\n✅ Local agent completed in ${result.duration}ms\n`
+          );
+        } else {
+          emitOutput(activityId, `\n\n❌ Error: ${result.error}\n`);
+          await this.setError(activityId, result.error || "Unknown error");
+        }
+
+        return result;
+      } else {
+        // Use Claude API
+        const executor = getAgentExecutor();
+
+        emitOutput(
+          activityId,
+          `🚀 Using Claude API\n\nObjective: ${objective}\n\n`
+        );
+
+        const result = await executor.executeTask({
+          activityId,
+          agentId: activity.name,
+          missionName: activity.name,
+          objective,
+          context: context || null,
+        });
+
+        // Emit result to client
+        emitOutput(activityId, `\n=== AGENT RESULT ===\n`);
+        emitOutput(activityId, `Success: ${result.success}\n`);
+        emitOutput(activityId, `Duration: ${result.duration}ms\n`);
+        emitOutput(
+          activityId,
+          `Tokens: ${result.tokenUsage.input} input, ${result.tokenUsage.output} output\n`
+        );
+        emitOutput(activityId, `\n--- Output ---\n${result.output}\n`);
+
+        if (result.thinking.length > 0) {
+          emitOutput(
+            activityId,
+            `\n--- Thinking Process ---\n${result.thinking.join("\n")}\n`
+          );
+        }
+
+        if (result.error) {
+          emitOutput(activityId, `\n--- Error ---\n${result.error}\n`);
+        }
+
+        return result;
       }
-
-      if (result.error) {
-        emitOutput(activityId, `\n--- Error ---\n${result.error}\n`);
-      }
-
-      return result;
     } catch (error) {
       const errorMessage = (error as Error).message;
       emitOutput(activityId, `\n❌ Agent execution failed: ${errorMessage}\n`);
