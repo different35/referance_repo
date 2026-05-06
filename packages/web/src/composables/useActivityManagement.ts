@@ -10,7 +10,7 @@ export function useActivityManagement() {
     loading.value = true;
     error.value = '';
     try {
-      activities.value = await trpc.activity.list.query();
+      activities.value = await trpc.activity?.list?.query() ?? [];
     } catch (err: any) {
       error.value = err instanceof Error ? err.message : 'Failed to load activities';
       console.error('Error fetching activities:', err);
@@ -21,7 +21,7 @@ export function useActivityManagement() {
 
   async function startActivity(activityId: string) {
     try {
-      const result = await trpc.activity.start.mutate({ id: activityId });
+      const result = await trpc.activity?.start?.mutate?.({ id: activityId });
       const activity = activities.value.find((a) => a.id === activityId);
       if (activity) {
         activity.state = 'starting';
@@ -36,7 +36,7 @@ export function useActivityManagement() {
 
   async function stopActivity(activityId: string) {
     try {
-      const result = await trpc.activity.stop.mutate({ id: activityId });
+      const result = await trpc.activity?.stop?.mutate?.({ id: activityId });
       const activity = activities.value.find((a) => a.id === activityId);
       if (activity) {
         activity.state = 'stopped';
@@ -50,7 +50,7 @@ export function useActivityManagement() {
   }
 
   function subscribeToStateChanges(activityId: string) {
-    return trpc.liveSession.stateChanges.subscribe(
+    return trpc.liveSession?.stateChanges?.subscribe?.(
       { activityId },
       {
         onData: (event: any) => {
