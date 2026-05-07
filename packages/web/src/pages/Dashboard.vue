@@ -73,116 +73,48 @@
         <div class="flex gap-4 overflow-x-auto pb-2">
 
           <!-- STRATEGIST -->
-          <div
-            class="agent-card relative flex-shrink-0 w-80 bg-[#0d1117] border rounded-lg overflow-hidden"
-            :class="stateClass(agentState('agent-strategist'), 'yellow')"
-            @click="openDetail('agent-strategist')"
-          >
-            <div class="h-0.5 w-full" :class="agentState('agent-strategist') === 'running' ? 'bg-green-500' : 'bg-slate-700'" />
-            <div class="p-4">
-              <div class="flex items-start justify-between mb-2">
-                <div>
-                  <div class="flex items-center gap-2 mb-0.5">
-                    <span class="text-[11px] font-bold tracking-widest text-yellow-400">STRATEGIST</span>
-                    <StateBadge :state="agentState('agent-strategist')" />
-                  </div>
-                  <p class="text-[10px] text-slate-500">Co-CEO, First Principles</p>
-                </div>
-                <div class="w-14 h-10 rounded bg-slate-800/60 flex items-center justify-center text-lg">📊</div>
-              </div>
-              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
-                Evaluated <span class="text-white font-semibold">4 strategic paths</span>. First principles analysis on growth levers; burn optimization, and runway extension.
-              </p>
-              <div class="flex gap-2 flex-wrap">
-                <span class="metric yellow">$1.8K <em>burn</em></span>
-                <span class="metric red">TBD <em>revenue</em></span>
-                <span class="metric blue">340K <em>runway</em></span>
-              </div>
-            </div>
-            <ActionBar :id="'agent-strategist'" :state="agentState('agent-strategist')" @start="doStart" @stop="doStop" />
-            <ProgressBar :state="agentState('agent-strategist')" color="bg-yellow-500" :pct="48" />
+          <div v-if="activityMap['agent-strategist']" class="flex-shrink-0 w-80">
+            <AgentCard
+              :agent="mapActivityToAgent(activityMap['agent-strategist'])"
+              :isSelected="detailId === 'agent-strategist'"
+              @select="openDetail('agent-strategist')"
+            />
           </div>
 
           <!-- HEY-SALES -->
-          <div
-            class="agent-card relative flex-shrink-0 w-80 bg-[#0d1117] border rounded-lg overflow-hidden"
-            :class="stateClass(agentState('agent-hey-sales'), 'orange')"
-            @click="openDetail('agent-hey-sales')"
-          >
-            <div class="h-0.5 w-full" :class="agentState('agent-hey-sales') === 'running' ? 'bg-green-500' : 'bg-blue-500'" />
-            <div class="p-4">
-              <div class="flex items-start justify-between mb-2">
-                <div>
-                  <div class="flex items-center gap-2 mb-0.5">
-                    <span class="text-[11px] font-bold tracking-widest text-orange-400">HEY-SALES</span>
-                    <StateBadge :state="agentState('agent-hey-sales')" />
-                  </div>
-                  <p class="text-[10px] text-slate-500">AI Voice Qualification & CRM</p>
-                </div>
-                <div class="w-14 h-10 rounded bg-slate-800/60 flex items-center justify-center text-lg">📞</div>
-              </div>
-              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
-                Just deployed. Awaiting <span class="text-white font-semibold">first inbound leads</span>. BANT qualification pipeline ready. Night guard: no calls 20:00–08:00.
-              </p>
-              <div class="flex gap-2 flex-wrap">
-                <span class="metric green">+5m <em>speed to lead</em></span>
-                <span class="metric orange">+68% <em>qualify</em></span>
-                <span class="metric blue">+95% <em>reach</em></span>
-              </div>
-            </div>
-            <ActionBar :id="'agent-hey-sales'" :state="agentState('agent-hey-sales')" @start="doStart" @stop="doStop" />
-            <ProgressBar :state="agentState('agent-hey-sales')" color="bg-blue-500" :pct="80" />
+          <div v-if="activityMap['agent-hey-sales']" class="flex-shrink-0 w-80">
+            <AgentCard
+              :agent="mapActivityToAgent(activityMap['agent-hey-sales'])"
+              :isSelected="detailId === 'agent-hey-sales'"
+              @select="openDetail('agent-hey-sales')"
+            />
           </div>
 
         </div>
         <div class="mt-6 h-px bg-slate-900" />
       </section>
 
-      <!-- COMMUNITY -->
-      <section v-show="activeTab === 'community'" class="mb-10 section-enter">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <span class="text-[10px] font-bold tracking-widest text-blue-400">⬡ COMMUNITY</span>
-            <span class="text-[10px] text-slate-600">Skool Engagement & Retention</span>
-          </div>
-          <span class="text-[10px] text-slate-700">{{ agents.community.length }} agent</span>
-        </div>
-        <div class="flex gap-4 overflow-x-auto pb-2">
-
-          <!-- COMMUNITY card -->
-          <div
-            class="agent-card relative flex-shrink-0 w-80 bg-[#0d1117] border rounded-lg overflow-hidden"
-            :class="stateClass(agentState('agent-community'), 'blue')"
-            @click="openDetail('agent-community')"
-          >
-            <div class="h-0.5 w-full bg-blue-500" />
-            <div class="p-4">
-              <div class="flex items-start justify-between mb-2">
-                <div>
-                  <div class="flex items-center gap-2 mb-0.5">
-                    <span class="text-[11px] font-bold tracking-widest text-blue-400">COMMUNITY</span>
-                    <StateBadge :state="agentState('agent-community')" />
-                  </div>
-                  <p class="text-[10px] text-slate-500">Skool Engagement & Retention</p>
-                </div>
-                <div class="w-14 h-10 rounded bg-slate-800/60 flex items-center justify-center text-lg">👥</div>
-              </div>
-              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
-                First live cycle completed. Learning <span class="text-white font-semibold">Skool member tracking</span> — only top 30 visible; yearly subscribers need different churn signals.
-              </p>
-              <div class="flex gap-2 flex-wrap">
-                <span class="metric green">&gt;90% <em>retention</em></span>
-                <span class="metric blue">+40% <em>weekly active</em></span>
-                <span class="metric slate">+12h <em>avg session</em></span>
-              </div>
-            </div>
-            <ActionBar :id="'agent-community'" :state="agentState('agent-community')" @start="doStart" @stop="doStop" />
-            <ProgressBar :state="agentState('agent-community')" color="bg-blue-500" :pct="90" />
-          </div>
-
-        </div>
-        <div class="mt-6 h-px bg-slate-900" />
-      </section>
+       <!-- COMMUNITY -->
+       <section v-show="activeTab === 'community'" class="mb-10 section-enter">
+         <div class="flex items-center justify-between mb-4">
+           <div class="flex items-center gap-3">
+             <span class="text-[10px] font-bold tracking-widest text-blue-400">⬡ COMMUNITY</span>
+             <span class="text-[10px] text-slate-600">Skool Engagement & Retention</span>
+           </div>
+           <span class="text-[10px] text-slate-700">{{ agents.community.length }} agent</span>
+         </div>
+         <div class="flex gap-4 overflow-x-auto pb-2">
+           <div v-if="activityMap['agent-community']" class="flex-shrink-0 w-80">
+             <AgentCard
+               :agent="mapActivityToAgent(activityMap['agent-community'])"
+               :isSelected="detailId === 'agent-community'"
+               @select="openDetail('agent-community')"
+             />
+           </div>
+         </div>
+ 
+         <div class="mt-6 h-px bg-slate-900" />
+       </section>
 
       <!-- MARKETING -->
       <section v-show="activeTab === 'marketing'" class="mb-10 section-enter">
@@ -329,6 +261,73 @@
           </div>
 
         </div>
+        <div class="mt-6 h-px bg-slate-900" />
+      </section>
+
+      <!-- CLAUDE AI -->
+      <section v-show="activeTab === 'claudeAi'" class="mb-10 section-enter">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-[10px] font-bold tracking-widest text-purple-400">⬡ CLAUDE AI</span>
+            <span class="text-[10px] text-slate-600">Claude Code Agent Orchestra</span>
+          </div>
+          <span class="text-[10px] text-slate-700">{{ agents.claudeAi.length }} agents</span>
+        </div>
+        <div class="flex gap-4 overflow-x-auto pb-2">
+
+          <!-- DATA ANALYST -->
+          <div class="agent-card relative flex-shrink-0 w-72 bg-[#0d1117] border rounded-lg overflow-hidden"
+            :class="stateClass(agentState('claude-data-analysis'), 'purple')" @click="openDetail('claude-data-analysis')">
+            <div class="h-0.5 w-full" :class="agentState('claude-data-analysis') === 'running' ? 'bg-green-500' : 'bg-purple-500'" />
+            <div class="p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-bold tracking-widest text-purple-300">DATA ANALYST</span>
+                <StateBadge :state="agentState('claude-data-analysis')" />
+              </div>
+              <p class="text-[10px] text-slate-500 mb-2">Load, explore, visualize datasets</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                <span class="text-white font-semibold">Amplitude MCP</span> bağlantılı. Veri setlerini analiz eder, grafik çizer, rapor üretir.
+              </p>
+            </div>
+            <ActionBar :id="'claude-data-analysis'" :state="agentState('claude-data-analysis')" @start="doStart" @stop="doStop" />
+          </div>
+
+          <!-- DEEP RESEARCHER -->
+          <div class="agent-card relative flex-shrink-0 w-72 bg-[#0d1117] border rounded-lg overflow-hidden"
+            :class="stateClass(agentState('claude-deep-researcher'), 'blue')" @click="openDetail('claude-deep-researcher')">
+            <div class="h-0.5 w-full" :class="agentState('claude-deep-researcher') === 'running' ? 'bg-green-500' : 'bg-blue-500'" />
+            <div class="p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-bold tracking-widest text-blue-300">DEEP RESEARCHER</span>
+                <StateBadge :state="agentState('claude-deep-researcher')" />
+              </div>
+              <p class="text-[10px] text-slate-500 mb-2">Multi-step web research & citations</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                Web araştırması, kaynak sentezi, <span class="text-white font-semibold">atıflı rapor</span> üretir.
+              </p>
+            </div>
+            <ActionBar :id="'claude-deep-researcher'" :state="agentState('claude-deep-researcher')" @start="doStart" @stop="doStop" />
+          </div>
+
+          <!-- STRUCTURED EXTRACTOR -->
+          <div class="agent-card relative flex-shrink-0 w-72 bg-[#0d1117] border rounded-lg overflow-hidden"
+            :class="stateClass(agentState('claude-structer-extractor'), 'green')" @click="openDetail('claude-structer-extractor')">
+            <div class="h-0.5 w-full" :class="agentState('claude-structer-extractor') === 'running' ? 'bg-green-500' : 'bg-emerald-500'" />
+            <div class="p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-bold tracking-widest text-emerald-300">STRUCT EXTRACTOR</span>
+                <StateBadge :state="agentState('claude-structer-extractor')" />
+              </div>
+              <p class="text-[10px] text-slate-500 mb-2">Unstructured → Typed JSON</p>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                E-posta, PDF, log → <span class="text-white font-semibold">JSON schema</span> dönüşümü.
+              </p>
+            </div>
+            <ActionBar :id="'claude-structer-extractor'" :state="agentState('claude-structer-extractor')" @start="doStart" @stop="doStop" />
+          </div>
+
+        </div>
+        <div class="mt-6 h-px bg-slate-900" />
       </section>
 
     </main>
@@ -386,9 +385,19 @@
   </div>
 </template>
 
+
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, defineComponent, h } from 'vue';
+import { 
+  ref, 
+  computed, 
+  onMounted, 
+  onUnmounted, 
+  defineComponent, 
+  h 
+} from 'vue'; // defineComponent ve h eklendi
 import { trpc } from '../lib/trpc.js';
+import AgentCard from '../components/floor/AgentCard.vue';
+import { mapActivityToAgent } from '../composables/agentMapping';
 
 // ─── Inline micro-components ─────────────────────────────
 const StateBadge = defineComponent({
@@ -467,17 +476,19 @@ const agents = {
   heycalli:  ['agent-strategist', 'agent-hey-sales'],
   community: ['agent-community'],
   marketing: ['agent-youtube', 'agent-repurpose', 'agent-twitter', 'agent-linkedin', 'agent-visuals', 'agent-gram'],
+  claudeAi:  ['claude-data-analysis', 'claude-deep-researcher', 'claude-field-agent', 'claude-support-agent', 'claude-structer-extractor'],
 };
 
 const navTabs = [
   { id: 'heycalli',   label: 'HEYCALLI',   color: 'bg-yellow-400' },
   { id: 'community',  label: 'COMMUNITY',  color: 'bg-blue-400' },
   { id: 'marketing',  label: 'MARKETING',  color: 'bg-orange-400' },
+  { id: 'claudeAi',   label: 'CLAUDE AI',  color: 'bg-purple-500' },
   { id: 'operations', label: 'OPERATIONS', color: 'bg-slate-600' },
 ];
 
 // ─── Derived ─────────────────────────────────────────────
-const allIds = [...agents.heycalli, ...agents.community, ...agents.marketing];
+const allIds = [...agents.heycalli, ...agents.community, ...agents.marketing, ...agents.claudeAi];
 
 const totalAgents  = computed(() => allIds.length);
 const activeAgents = computed(() => allIds.filter(id => activityMap.value[id]?.state === 'running').length);
@@ -543,9 +554,18 @@ function subscribeAll() {
 
 // ─── Actions ─────────────────────────────────────────────
 async function doStart(id: string) {
+  const isClaudeAgent = id.startsWith("claude-");
+  const claudeAgentName = isClaudeAgent
+    ? id.replace("claude-", "")
+    : undefined;
+
   activityMap.value[id] = { ...activityMap.value[id], state: 'starting' };
   try {
-    const r = await (trpc as any).activity.start.mutate({ id });
+    const r = await (trpc as any).activity.start.mutate({
+      id,
+      objective: isClaudeAgent ? `Execute your task.` : undefined,
+      claudeAgentName,
+    });
     activityMap.value[id] = r.activity ?? activityMap.value[id];
   } catch (e: any) {
     activityMap.value[id] = { ...activityMap.value[id], state: 'error', error: e.message };
@@ -605,16 +625,5 @@ onUnmounted(() => {
 .drawer-enter-from > div, .drawer-leave-to > div { transform: translateX(100%); }
 
 /* metric pill helper */
-.metric { @apply text-[10px] font-bold px-1.5 py-0.5 rounded; }
-.metric em { @apply font-normal text-slate-500 not-italic; }
-.metric.yellow { @apply bg-yellow-500/10 text-yellow-400; }
-.metric.orange { @apply bg-orange-500/10 text-orange-400; }
-.metric.green  { @apply bg-green-500/10 text-green-400; }
-.metric.blue   { @apply bg-blue-500/10 text-blue-400; }
-.metric.red    { @apply bg-red-500/10 text-red-400; }
-.metric.purple { @apply bg-purple-500/10 text-purple-400; }
-.metric.sky    { @apply bg-sky-500/10 text-sky-400; }
-.metric.pink   { @apply bg-pink-500/10 text-pink-400; }
-.metric.rose   { @apply bg-rose-500/10 text-rose-400; }
-.metric.slate  { @apply bg-slate-800 text-slate-400; }
+
 </style>

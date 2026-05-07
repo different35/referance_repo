@@ -82,8 +82,18 @@ export default defineConfig(({ mode }) => {
       port: Number(env.WEB_PORT ?? 5173),
       host: true,
       proxy: {
-        '/api': { target: apiUrl, changeOrigin: true, secure: false },
-        '/trpc': { target: apiUrl, changeOrigin: true, secure: false, ws: true },
+        '/api': {
+          target: apiUrl,
+          changeOrigin: true,
+          secure: false,
+          cookieDomainRewrite: 'localhost',
+        },
+        '/trpc': {
+          target: apiUrl,
+          changeOrigin: true,
+          secure: false,
+          cookieDomainRewrite: 'localhost',
+        },
       },
     },
     preview: {

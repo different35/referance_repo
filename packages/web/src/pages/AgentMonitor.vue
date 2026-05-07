@@ -114,6 +114,7 @@
 </template>
 
 <script setup lang="ts">
+import { trpc } from "../lib/trpc";
 import { ref, onMounted, onUnmounted } from "vue";
 
 interface AgentEvent {
@@ -183,18 +184,14 @@ function updateTaskCounts(event: AgentEvent) {
 async function submitTestTask() {
   isSubmitting.value = true;
   try {
-    const response = await fetch("/trpc/agent.executeAgent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        agentId: `agent-${Math.random().toString(36).slice(2, 9)}`,
-        input: "Analyze current campaign performance and suggest optimizations",
-      }),
+    const useLocal = confirm("Use LM Studio local model? (Cancel = Claude API)");
+    await trpc.agent.executeAgent.mutate({
+      agentId: `agent-${Math.random().toString(36).slice(2, 9)}`,
+      input: "Analyze current campaign performance and suggest optimizations",
+      useLocal,
     });
 
-    if (response.ok) {
-      activeTasks.value++;
-    }
+    activeTasks.value++;
   } catch (error) {
     console.error("Error submitting task:", error);
   } finally {
@@ -202,13 +199,15 @@ async function submitTestTask() {
   }
 }
 
+
+
 async function fetchCampaignCount() {
   try {
-    const response = await fetch("/trpc/agent.getCampaigns");
-    const data = await response.json();
-    campaignCount.value = data.result?.count || 0;
+    const result = await trpc.agent.getCampaigns.query();
+    campaignCount.value = result.count || 0;
   } catch (error) {
     console.error("Error fetching campaign count:", error);
   }
 }
+
 </script>

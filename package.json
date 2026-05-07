@@ -26,8 +26,14 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "better-sqlite3": "^12.9.0",
     "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [],
+      "allowAny": [],
+      "ignoreUnmet": ["zod"]
+    }
   },
   "dependencies": {
     "@langchain/anthropic": "^1.3.28",

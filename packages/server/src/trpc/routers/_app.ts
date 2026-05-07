@@ -5,6 +5,8 @@ import { missionRouter } from './mission.router.js';
 import { proxyRouter } from './proxy.router.js';
 import { liveSessionRouter } from './live-session.router.js';
 import { agentRouter } from './agent.router.js';
+import { localModelRouter } from './local-model.router.js';
+import { skillsRouter } from './skills.router.js';
 
 export const appRouter = router({
   auth: authRouter,
@@ -13,6 +15,8 @@ export const appRouter = router({
   proxy: proxyRouter,
   liveSession: liveSessionRouter,
   agent: agentRouter,
+  localModel: localModelRouter,
+  skills: skillsRouter,
 });
 
 export type AppRouter = typeof appRouter;

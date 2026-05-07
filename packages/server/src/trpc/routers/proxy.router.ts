@@ -5,9 +5,7 @@ import * as schema from '../../db/schema.js';
 
 export const proxyRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
-    const proxies = await ctx.db
-      .select()
-      .from(schema.proxyProfiles);
+    const proxies = await ctx.db.select().from(schema.proxyProfiles);
     return proxies;
   }),
 
@@ -22,19 +20,16 @@ export const proxyRouter = router({
     }),
 
   create: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(1),
-        protocol: z.enum(['http', 'https', 'socks5']),
-        host: z.string().min(1),
-        port: z.number().int().min(1).max(65535),
-        username: z.string().optional(),
-        password: z.string().optional(),
-      })
-    )
+    .input(z.object({
+      name: z.string().min(1),
+      protocol: z.enum(['http', 'https', 'socks5']),
+      host: z.string().min(1),
+      port: z.number().int().min(1).max(65535),
+      username: z.string().optional(),
+      password: z.string().optional(),
+    }))
     .mutation(async ({ ctx, input }) => {
       const id = crypto.randomUUID();
-      // In production: encrypt password before storing
       const [proxy] = await ctx.db
         .insert(schema.proxyProfiles)
         .values({

@@ -1,10 +1,3 @@
-/**
- * Agent Executor Service
- *
- * Runs actual Claude tasks using Anthropic SDK
- * Integrates with ActivityService for state management
- */
-
 import { Anthropic } from "@anthropic-ai/sdk";
 import { agentEventBus } from "../agents/event-emitter.js";
 
@@ -21,10 +14,7 @@ export interface AgentResult {
   success: boolean;
   output: string;
   thinking: string[];
-  tokenUsage: {
-    input: number;
-    output: number;
-  };
+  tokenUsage: { input: number; output: number };
   duration: number;
   error?: string;
 }
@@ -39,15 +29,10 @@ export class AgentExecutor {
     });
   }
 
-  /**
-   * Execute a task using Claude
-   * Real LLM execution - not mock!
-   */
   async executeTask(task: AgentTask): Promise<AgentResult> {
     const startTime = Date.now();
     const thoughts: string[] = [];
 
-    // Emit: task started
     agentEventBus.emitAgentEvent({
       type: "task_submitted",
       agentId: task.agentId,
@@ -57,7 +42,6 @@ export class AgentExecutor {
     });
 
     try {
-      // Emit: thinking phase
       agentEventBus.emitAgentEvent({
         type: "thinking",
         agentId: task.agentId,
@@ -66,10 +50,8 @@ export class AgentExecutor {
         data: { phase: "analyzing objective" },
       });
 
-      // System prompt for the agent
       const systemPrompt = this.buildSystemPrompt(task);
 
-      // Call Claude API - THIS IS REAL, NOT MOCK
       const response = await this.client.messages.create({
         model: this.model,
         max_tokens: 2000,
@@ -80,19 +62,16 @@ export class AgentExecutor {
           },
         ],
         system: systemPrompt,
-      } as any);
+      });
 
-      // Extract text blocks (thinking not yet available in this API version)
       let outputText = "";
-
       for (const block of response.content) {
         if (block.type === "text") {
-          outputText = (block as any).text;
+          outputText = block.text;
           thoughts.push(outputText);
         }
       }
 
-      // Emit: research phase
       agentEventBus.emitAgentEvent({
         type: "researching",
         agentId: task.agentId,
@@ -101,7 +80,6 @@ export class AgentExecutor {
         data: { thoughts: thoughts.length },
       });
 
-      // Emit: writing phase
       agentEventBus.emitAgentEvent({
         type: "writing",
         agentId: task.agentId,
@@ -110,7 +88,6 @@ export class AgentExecutor {
         data: { outputLength: outputText.length },
       });
 
-      // Emit: completed
       agentEventBus.emitAgentEvent({
         type: "completed",
         agentId: task.agentId,
@@ -133,8 +110,8 @@ export class AgentExecutor {
         duration,
       };
     } catch (error) {
-      // Emit: error
       const errorMessage = (error as Error).message;
+
       agentEventBus.emitAgentEvent({
         type: "error",
         agentId: task.agentId,
@@ -150,10 +127,7 @@ export class AgentExecutor {
         success: false,
         output: "",
         thinking: thoughts,
-        tokenUsage: {
-          input: 0,
-          output: 0,
-        },
+        tokenUsage: { input: 0, output: 0 },
         duration,
         error: errorMessage,
       };

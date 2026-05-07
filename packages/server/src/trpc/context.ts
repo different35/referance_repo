@@ -1,33 +1,32 @@
-import type { Context as HonoContext } from 'hono';
-import type { Role } from '@swarm/shared';
 import { auth } from '../auth/auth.js';
 import { db } from '../db/client.js';
+import type { Context as HonoContext } from 'hono';
 
-export interface AuthedUser {
+export interface User {
   id: string;
   email: string;
   name: string;
-  role: Role;
+  role: string;
 }
 
-export interface AuthedSession {
+export interface Session {
   id: string;
   userId: string;
   expiresAt: Date;
 }
 
-export interface Context {
+export interface TRPCContext {
   db: typeof db;
-  user: AuthedUser | null;
-  session: AuthedSession | null;
+  user: User | null;
+  session: Session | null;
   ipAddress: string | null;
 }
 
-export async function createContext(c: HonoContext): Promise<Context> {
+export async function createContext(c: HonoContext): Promise<TRPCContext> {
   const headers = c.req.raw.headers;
 
-  let user: AuthedUser | null = null;
-  let session: AuthedSession | null = null;
+  let user: User | null = null;
+  let session: Session | null = null;
 
   try {
     const result = await auth.api.getSession({ headers });
@@ -41,11 +40,11 @@ export async function createContext(c: HonoContext): Promise<Context> {
         id: result.user.id,
         email: result.user.email,
         name: result.user.name,
-        role: ((result.user as { role?: string }).role ?? 'operator') as Role,
+        role: (result.user.role ?? 'operator') as string,
       };
     }
   } catch {
-    // Session geçersiz/yok — public olarak devam et.
+    // Session geçersiz/yok — public olarak devam et
   }
 
   const ipAddress =

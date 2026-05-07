@@ -1,11 +1,14 @@
 import { z } from "zod";
 import { router, publicProcedure } from "../trpc.js";
+import { eq } from "drizzle-orm";
+import * as schema from "../../db/schema.js";
 import {
   enqueueAgentTask,
   getJobStatus,
   initializeQueue,
 } from "../../agents/queue-manager.js";
 import { getSwarmAgent } from "../../agents/llm-agent.js";
+import { getLocalAgentService } from "../../services/local-agent.service.js";
 import {
   storeCampaignMemory,
   searchSimilarCampaigns,
@@ -15,7 +18,6 @@ import { approvalManager } from "../../agents/approval-manager.js";
 import { multiChannelToolkit } from "../../agents/multi-channel-tools.js";
 
 export const agentRouter = router({
-  // Initialize agent infrastructure
   initialize: publicProcedure.mutation(async () => {
     try {
       await initializeQueue();
@@ -28,16 +30,13 @@ export const agentRouter = router({
     }
   }),
 
-  // Submit a task to an agent
   submitTask: publicProcedure
-    .input(
-      z.object({
-        agentId: z.string(),
-        taskType: z.enum(["campaign", "content", "analysis", "approval"]),
-        input: z.string(),
-        priority: z.number().optional(),
-      })
-    )
+    .input(z.object({
+      agentId: z.string(),
+      taskType: z.enum(["campaign", "content", "analysis", "approval"]),
+      input: z.string(),
+      priority: z.number().optional(),
+    }))
     .mutation(async ({ input }) => {
       try {
         const job = await enqueueAgentTask(
@@ -46,7 +45,6 @@ export const agentRouter = router({
           input.input,
           input.priority
         );
-
         return {
           jobId: job.id,
           status: "queued",
@@ -61,7 +59,6 @@ export const agentRouter = router({
       }
     }),
 
-  // Get job status
   getJobStatus: publicProcedure
     .input(z.object({ jobId: z.string() }))
     .query(async ({ input }) => {
@@ -69,24 +66,71 @@ export const agentRouter = router({
       return status || { error: "Job not found" };
     }),
 
-  // Direct agent execution (non-queued)
   executeAgent: publicProcedure
-    .input(
-      z.object({
-        agentId: z.string(),
-        input: z.string(),
-      })
-    )
-    .mutation(async ({ input }) => {
+    .input(z.object({
+      agentId: z.string(),
+      input: z.string().optional(),
+      config: z.record(z.unknown()).optional(),
+      useLocal: z.boolean().optional().default(false),
+    }))
+    .mutation(async ({ ctx, input }) => {
       try {
+        let objective = input.input;
+        let config = input.config;
+
+        if (!objective && !config) {
+          const [activity] = await ctx.db
+            .select()
+            .from(schema.activities)
+            .where(eq(schema.activities.id, input.agentId))
+            .limit(1);
+
+          if (activity?.missionId) {
+            const [mission] = await ctx.db
+              .select()
+              .from(schema.missions)
+              .where(eq(schema.missions.id, activity.missionId))
+              .limit(1);
+
+            if (mission?.description) {
+              objective = mission.description;
+            }
+            if (mission?.defaultConfig) {
+              config = mission.defaultConfig as Record<string, unknown>;
+            }
+          }
+        }
+
+        if (!objective) {
+          return { success: false, error: `Agent ${input.agentId} icin mission tanimi bulunamadi.` };
+        }
+
+        const fullTask = config 
+          ? `${objective}\n\nKonfigurasyon: ${JSON.stringify(config, null, 2)}`
+          : objective;
+
+        if (input.useLocal) {
+          const localService = getLocalAgentService();
+          const task = {
+            activityId: `agent-${Date.now()}`,
+            agentId: input.agentId,
+            objective: fullTask,
+          };
+          const result = await localService.executeTask(task, () => {});
+          return {
+            success: result.success,
+            agentId: input.agentId,
+            taskId: task.activityId,
+            output: result.output,
+            duration: result.duration,
+            error: result.error,
+            timestamp: Date.now(),
+          };
+        }
+
         const agent = getSwarmAgent();
         const taskId = `task-${Date.now()}`;
-        const result = await agent.executeTask(
-          input.input,
-          input.agentId,
-          taskId
-        );
-
+        const result = await agent.executeTask(objective, input.agentId, taskId);
         return {
           success: true,
           agentId: input.agentId,
@@ -105,19 +149,16 @@ export const agentRouter = router({
       }
     }),
 
-  // Store campaign in vector DB
   storeCampaign: publicProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        description: z.string(),
-        ctr: z.number(),
-        conversionRate: z.number(),
-        roi: z.number(),
-        keywords: z.array(z.string()),
-      })
-    )
+    .input(z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string(),
+      ctr: z.number(),
+      conversionRate: z.number(),
+      roi: z.number(),
+      keywords: z.array(z.string()),
+    }))
     .mutation(async ({ input }) => {
       try {
         await storeCampaignMemory({
@@ -132,7 +173,6 @@ export const agentRouter = router({
           keywords: input.keywords,
           metadata: {},
         });
-
         return { success: true };
       } catch (error) {
         return {
@@ -142,20 +182,14 @@ export const agentRouter = router({
       }
     }),
 
-  // Search similar campaigns
   searchCampaigns: publicProcedure
-    .input(
-      z.object({
-        query: z.string(),
-        topK: z.number().optional(),
-      })
-    )
+    .input(z.object({
+      query: z.string(),
+      topK: z.number().optional(),
+    }))
     .query(async ({ input }) => {
       try {
-        const campaigns = await searchSimilarCampaigns(
-          input.query,
-          input.topK
-        );
+        const campaigns = await searchSimilarCampaigns(input.query, input.topK);
         return {
           success: true,
           campaigns,
@@ -169,7 +203,6 @@ export const agentRouter = router({
       }
     }),
 
-  // Get all campaign memories
   getCampaigns: publicProcedure.query(async () => {
     try {
       const campaigns = await getAllCampaignMemories();
@@ -188,27 +221,20 @@ export const agentRouter = router({
     }
   }),
 
-  // ────────────────────────────────────────────────────────
-  // Human-in-the-Loop Approval System
-  // ────────────────────────────────────────────────────────
-
-  // Request approval for critical action
   requestApproval: publicProcedure
-    .input(
-      z.object({
-        taskId: z.string(),
-        agentId: z.string(),
-        action: z.enum([
-          "publish_campaign",
-          "increase_budget",
-          "change_targeting",
-          "deploy",
-        ]),
-        description: z.string(),
-        proposedChanges: z.record(z.unknown()),
-        riskLevel: z.enum(["low", "medium", "high", "critical"]).optional(),
-      })
-    )
+    .input(z.object({
+      taskId: z.string(),
+      agentId: z.string(),
+      action: z.enum([
+        "publish_campaign",
+        "increase_budget",
+        "change_targeting",
+        "deploy",
+      ]),
+      description: z.string(),
+      proposedChanges: z.record(z.unknown()),
+      riskLevel: z.enum(["low", "medium", "high", "critical"]).optional(),
+    }))
     .mutation(async ({ input }) => {
       const request = approvalManager.createApprovalRequest(
         input.taskId,
@@ -218,7 +244,6 @@ export const agentRouter = router({
         input.proposedChanges,
         input.riskLevel
       );
-
       return {
         success: true,
         approvalId: request.id,
@@ -226,7 +251,6 @@ export const agentRouter = router({
       };
     }),
 
-  // Get pending approvals
   getPendingApprovals: publicProcedure.query(async () => {
     const requests = approvalManager.getPendingRequests();
     return {
@@ -235,55 +259,42 @@ export const agentRouter = router({
     };
   }),
 
-  // Approve a request
   approveRequest: publicProcedure
-    .input(
-      z.object({
-        requestId: z.string(),
-        approverNote: z.string(),
-        approver: z.string(),
-      })
-    )
+    .input(z.object({
+      requestId: z.string(),
+      approverNote: z.string(),
+      approver: z.string(),
+    }))
     .mutation(async ({ input }) => {
       const success = approvalManager.approveRequest(
         input.requestId,
         input.approverNote,
         input.approver
       );
-
       return {
         success,
         message: success ? "Approval granted" : "Approval failed",
       };
     }),
 
-  // Reject a request
   rejectRequest: publicProcedure
-    .input(
-      z.object({
-        requestId: z.string(),
-        reason: z.string(),
-        approver: z.string(),
-      })
-    )
+    .input(z.object({
+      requestId: z.string(),
+      reason: z.string(),
+      approver: z.string(),
+    }))
     .mutation(async ({ input }) => {
       const success = approvalManager.rejectRequest(
         input.requestId,
         input.reason,
         input.approver
       );
-
       return {
         success,
         message: success ? "Request rejected" : "Rejection failed",
       };
     }),
 
-  // ────────────────────────────────────────────────────────
-  // Multi-Channel Marketing Tools
-  // ────────────────────────────────────────────────────────
-
-  // Get configured channels
   getChannels: publicProcedure.query(async () => {
     const channels = multiChannelToolkit.getConfiguredChannels();
     return {
@@ -292,35 +303,28 @@ export const agentRouter = router({
     };
   }),
 
-  // Execute campaign action on specific platform
   executeChannelAction: publicProcedure
-    .input(
-      z.object({
-        platform: z.enum([
-          "google_ads",
-          "facebook",
-          "linkedin",
-          "twitter",
-          "tiktok",
-        ]),
-        action: z.enum([
-          "create_campaign",
-          "update_budget",
-          "pause_campaign",
-          "enable_campaign",
-          "adjust_targeting",
-        ]),
-        campaignId: z.string().nullable(),
-        parameters: z.record(z.unknown()),
-        approvalId: z.string().optional(),
-      })
-    )
+    .input(z.object({
+      platform: z.enum([
+        "google_ads",
+        "facebook",
+        "linkedin",
+        "twitter",
+        "tiktok",
+      ]),
+      action: z.enum([
+        "create_campaign",
+        "update_budget",
+        "pause_campaign",
+        "enable_campaign",
+        "adjust_targeting",
+      ]),
+      campaignId: z.string().nullable(),
+      parameters: z.record(z.unknown()),
+      approvalId: z.string().optional(),
+    }))
     .mutation(async ({ input }) => {
-      // Check if approval is required and granted
-      if (
-        input.approvalId &&
-        !approvalManager.canExecute(input.approvalId)
-      ) {
+      if (input.approvalId && !approvalManager.canExecute(input.approvalId)) {
         return {
           success: false,
           error: "Action not approved",
@@ -329,13 +333,12 @@ export const agentRouter = router({
 
       const result = await multiChannelToolkit.executeAction({
         platform: input.platform,
-        action: input.action as any,
+        action: input.action,
         campaignId: input.campaignId,
         parameters: input.parameters,
         estimatedCost: null,
         requiresApproval: !!input.approvalId,
       });
-
       return result;
     }),
 });

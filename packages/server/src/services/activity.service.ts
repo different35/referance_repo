@@ -269,11 +269,11 @@ export class ActivityService {
         if (!isAvailable) {
           emitOutput(
             activityId,
-            `❌ LM Studio not available at http://localhost:1234\n`
+            `❌ LM Studio not available at http://127.0.0.1:8080/v1`
           );
           await this.setError(
             activityId,
-            "LM Studio unavailable - ensure LM Studio is running on port 1234"
+            "LM Studio unavailable - ensure LM Studio is running on port 8080"
           );
           return;
         }

@@ -5,9 +5,7 @@ import * as schema from '../../db/schema.js';
 
 export const missionRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
-    const missions = await ctx.db
-      .select()
-      .from(schema.missions);
+    const missions = await ctx.db.select().from(schema.missions);
     return missions;
   }),
 
@@ -22,14 +20,12 @@ export const missionRouter = router({
     }),
 
   create: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(1),
-        description: z.string().optional(),
-        configSchema: z.record(z.unknown()).optional(),
-        defaultConfig: z.record(z.unknown()).optional(),
-      })
-    )
+    .input(z.object({
+      name: z.string().min(1),
+      description: z.string().optional(),
+      configSchema: z.record(z.unknown()).optional(),
+      defaultConfig: z.record(z.unknown()).optional(),
+    }))
     .mutation(async ({ ctx, input }) => {
       const id = crypto.randomUUID();
       const [mission] = await ctx.db
@@ -46,15 +42,13 @@ export const missionRouter = router({
     }),
 
   update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        name: z.string().optional(),
-        description: z.string().optional(),
-        configSchema: z.record(z.unknown()).optional(),
-        defaultConfig: z.record(z.unknown()).optional(),
-      })
-    )
+    .input(z.object({
+      id: z.string(),
+      name: z.string().optional(),
+      description: z.string().optional(),
+      configSchema: z.record(z.unknown()).optional(),
+      defaultConfig: z.record(z.unknown()).optional(),
+    }))
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
       const updateData: Record<string, unknown> = {};

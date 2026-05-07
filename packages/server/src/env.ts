@@ -9,6 +9,8 @@ const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(16).default('dev-secret-change-in-production'),
   BETTER_AUTH_URL: z.string().url().default('http://localhost:3000'),
   ANTHROPIC_API_KEY: z.string().optional(),
+  LM_STUDIO_URL: z.string().url().default('http://127.0.0.1:8080/v1'),
+  LM_STUDIO_MODEL: z.string().default('local-model'),
   VSCODE_BRIDGE_PORT: z.coerce.number().int().default(3001),
   VSCODE_BRIDGE_API_KEY: z.string().min(8).optional(),
   VAPID_PUBLIC_KEY: z.string().optional(),

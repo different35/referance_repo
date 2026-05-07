@@ -85,8 +85,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { Agent } from './types';
-
 const props = defineProps<{
   agent: Agent;
   isSelected?: boolean;
@@ -159,5 +159,5 @@ function metricColorClass(color?: string) {
   }
 }
 
-import { computed } from 'vue';
+
 </script>

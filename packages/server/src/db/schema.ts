@@ -99,6 +99,16 @@ export const missions = sqliteTable('missions', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now),
 });
 
+export const agentSkills = sqliteTable('agent_skills', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  promptTemplate: text('prompt_template').notNull(),
+  requiredFields: text('required_fields', { mode: 'json' }).$type<string[]>(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now),
+});
+
 export const proxyProfiles = sqliteTable('proxy_profiles', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),

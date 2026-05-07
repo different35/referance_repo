@@ -5,12 +5,16 @@ export function useActivityManagement() {
   const activities = ref<any[]>([]);
   const loading = ref(false);
   const error = ref('');
+  const activityMap = ref<Record<string, any>>({});
+  const agentOutputs = ref<Record<string, { output: string; duration: number; error?: string }>>({});
 
   async function fetchActivities() {
     loading.value = true;
     error.value = '';
     try {
-      activities.value = await trpc.activity?.list?.query() ?? [];
+      const list: any[] = await trpc.activity.list.query();
+      activities.value = list;
+      list.forEach(a => { activityMap.value[a.id] = a; });
     } catch (err: any) {
       error.value = err instanceof Error ? err.message : 'Failed to load activities';
       console.error('Error fetching activities:', err);
@@ -21,13 +25,10 @@ export function useActivityManagement() {
 
   async function startActivity(activityId: string) {
     try {
-      const result = await trpc.activity?.start?.mutate?.({ id: activityId });
-      const activity = activities.value.find((a) => a.id === activityId);
-      if (activity) {
-        activity.state = 'starting';
-        activity.startedAt = new Date();
+      await trpc.activity.start.mutate({ id: activityId });
+      if (activityMap.value[activityId]) {
+        activityMap.value[activityId].state = 'starting';
       }
-      return result;
     } catch (err: any) {
       error.value = err instanceof Error ? err.message : 'Failed to start activity';
       throw err;
@@ -36,35 +37,63 @@ export function useActivityManagement() {
 
   async function stopActivity(activityId: string) {
     try {
-      const result = await trpc.activity?.stop?.mutate?.({ id: activityId });
-      const activity = activities.value.find((a) => a.id === activityId);
-      if (activity) {
-        activity.state = 'stopped';
-        activity.stoppedAt = new Date();
+      await trpc.activity.stop.mutate({ id: activityId });
+      if (activityMap.value[activityId]) {
+        activityMap.value[activityId].state = 'stopped';
       }
-      return result;
     } catch (err: any) {
       error.value = err instanceof Error ? err.message : 'Failed to stop activity';
       throw err;
     }
   }
 
+  async function executeAgent(agentId: string, useLocal: boolean = false) {
+    try {
+      const result: any = await trpc.agent.executeAgent.mutate({ agentId, useLocal });
+      if (result) {
+        agentOutputs.value[agentId] = {
+          output: result.output || '',
+          duration: result.duration || 0,
+          error: result.error,
+        };
+        if (activityMap.value[agentId]) {
+          activityMap.value[agentId].state = result.success ? 'running' : 'error';
+          activityMap.value[agentId].error = result.error || null;
+        }
+      }
+      return result;
+    } catch (err: any) {
+      agentOutputs.value[agentId] = { output: '', duration: 0, error: err.message };
+      if (activityMap.value[agentId]) {
+        activityMap.value[agentId].state = 'error';
+        activityMap.value[agentId].error = err.message;
+      }
+      throw err;
+    }
+  }
+
+  async function resetError(activityId: string) {
+    try {
+      await trpc.activity.resetError.mutate({ id: activityId });
+    } catch (err: any) {
+      error.value = err instanceof Error ? err.message : 'Failed to reset error';
+      throw err;
+    }
+  }
+
   function subscribeToStateChanges(activityId: string) {
-    return trpc.liveSession?.stateChanges?.subscribe?.(
+    return trpc.liveSession.stateChanges.subscribe(
       { activityId },
       {
         onData: (event: any) => {
-          const activity = activities.value.find((a) => a.id === activityId);
-          if (activity) {
-            activity.state = event.newState;
+          if (activityMap.value[activityId]) {
+            activityMap.value[activityId].state = event.newState;
             if (event.error) {
-              activity.error = event.error;
+              activityMap.value[activityId].error = event.error;
             }
           }
         },
-        onError: (err: any) => {
-          console.error('Subscription error:', err);
-        },
+        onError: () => {},
       }
     );
   }
@@ -75,11 +104,15 @@ export function useActivityManagement() {
 
   return {
     activities: computed(() => activities.value),
+    activityMap: computed(() => activityMap.value),
+    agentOutputs: computed(() => agentOutputs.value),
     loading: computed(() => loading.value),
     error: computed(() => error.value),
     fetchActivities,
     startActivity,
     stopActivity,
+    executeAgent,
+    resetError,
     subscribeToStateChanges,
   };
 }

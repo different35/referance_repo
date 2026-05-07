@@ -1,9 +1,8 @@
 import { initTRPC, TRPCError } from '@trpc/server';
-import type { Context } from './context.js';
-import type { Role } from '@swarm/shared';
 import { hasRole } from '@swarm/shared';
+import type { TRPCContext } from './context.js';
 
-const t = initTRPC.context<Context>().create({
+const t = initTRPC.context<TRPCContext>().create({
   errorFormatter({ shape, error }) {
     return {
       ...shape,
@@ -24,6 +23,7 @@ const requireUser = middleware(({ ctx, next }) => {
   if (!ctx.user || !ctx.session) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Önce giriş yapın' });
   }
+
   return next({
     ctx: {
       ...ctx,
@@ -35,9 +35,9 @@ const requireUser = middleware(({ ctx, next }) => {
 
 export const protectedProcedure = publicProcedure.use(requireUser);
 
-export function requireRole(required: Role) {
+export function requireRole(required: import('@swarm/shared').Role) {
   return protectedProcedure.use(({ ctx, next }) => {
-    if (!hasRole(ctx.user.role, required)) {
+    if (!hasRole(ctx.user.role as import('@swarm/shared').Role, required)) {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: `Bu işlem için ${required} yetkisi gerekli`,

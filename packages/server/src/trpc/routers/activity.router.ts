@@ -1,14 +1,12 @@
-import { router, publicProcedure, protectedProcedure } from '../trpc.js';
+import { router, protectedProcedure } from '../trpc.js';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import * as schema from '../../db/schema.js';
 import { ActivityService } from '../../services/activity.service.js';
 
 export const activityRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
-    const activities = await ctx.db
-      .select()
-      .from(schema.activities);
+    const activities = await ctx.db.select().from(schema.activities);
     return activities;
   }),
 
@@ -23,13 +21,11 @@ export const activityRouter = router({
     }),
 
   create: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(1),
-        missionId: z.string(),
-        proxyProfileId: z.string().optional(),
-      })
-    )
+    .input(z.object({
+      name: z.string().min(1),
+      missionId: z.string(),
+      proxyProfileId: z.string().optional(),
+    }))
     .mutation(async ({ ctx, input }) => {
       const id = crypto.randomUUID();
       const [activity] = await ctx.db
@@ -46,30 +42,20 @@ export const activityRouter = router({
     }),
 
   start: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        objective: z.string().optional(),
-        context: z.record(z.unknown()).optional(),
-        useLocal: z.boolean().optional().default(false),
-      })
-    )
+    .input(z.object({
+      id: z.string(),
+      objective: z.string().optional(),
+      context: z.record(z.unknown()).optional(),
+      useLocal: z.boolean().optional().default(false),
+    }))
     .mutation(async ({ ctx, input }) => {
       const service = new ActivityService(ctx.db);
       const activity = await service.startActivity(input.id);
-
-      // Transition to running after starting
       await service.markRunning(input.id);
 
-      // Execute agent task asynchronously (don't block response)
       if (input.objective) {
         service
-          .runAgentTask(
-            input.id,
-            input.objective,
-            input.context,
-            input.useLocal
-          )
+          .runAgentTask(input.id, input.objective, input.context, input.useLocal)
           .catch((err) => {
             console.error(`Agent task failed for activity ${input.id}:`, err);
           });

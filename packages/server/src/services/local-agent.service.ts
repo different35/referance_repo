@@ -7,6 +7,7 @@
 
 import { OpenAI } from "openai";
 import { agentEventBus } from "../agents/event-emitter.js";
+import { getEnv } from "../env.js";
 
 export interface LocalAgentTask {
   activityId: string;
@@ -28,16 +29,16 @@ export class LocalAgentService {
   private model: string;
 
   constructor(
-    baseUrl: string = process.env.LM_STUDIO_URL || "http://localhost:1234/v1",
-    model: string = process.env.LM_STUDIO_MODEL || "local-model"
+    baseUrl?: string,
+    model?: string
   ) {
-    this.baseUrl = baseUrl;
-    this.model = model;
+    const env = getEnv();
+    this.baseUrl = baseUrl ?? env.LM_STUDIO_URL;
+    this.model = model ?? env.LM_STUDIO_MODEL;
 
-    // Initialize OpenAI client pointing to LM Studio
     this.client = new OpenAI({
-      baseURL: baseUrl,
-      apiKey: "lm-studio", // LM Studio doesn't require real API key
+      baseURL: this.baseUrl,
+      apiKey: "lm-studio",
     });
   }
 
@@ -168,6 +169,30 @@ Provide a structured, detailed response in JSON format:
         error: errorMessage,
       };
     }
+  }
+
+  /**
+   * Direct chat completion (non-streaming)
+   */
+  async chat(
+    messages: { role: 'system' | 'user' | 'assistant'; content: string }[],
+    temperature: number = 0.7,
+    maxTokens: number = 2000
+  ): Promise<{ content: string; model: string; duration: number }> {
+    const startTime = Date.now();
+    const completion = await this.client.chat.completions.create({
+      model: this.model,
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+      stream: false,
+    });
+    const duration = Date.now() - startTime;
+    return {
+      content: completion.choices[0]?.message?.content || '',
+      model: completion.model || this.model,
+      duration,
+    };
   }
 
   /**

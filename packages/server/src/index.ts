@@ -14,6 +14,7 @@ import { auth } from './auth/auth.js';
 import { appRouter, type AppRouter } from './trpc/routers/_app.js';
 import { createContext } from './trpc/context.js';
 import { agentEventBus } from './agents/event-emitter.js';
+import { getLocalAgentService } from './services/local-agent.service.js';
 
 export type { AppRouter };
 
@@ -25,7 +26,7 @@ const allowedOrigins =
     ? env.PUBLIC_DOMAIN
       ? [`https://${env.PUBLIC_DOMAIN}`]
       : []
-    : ['http://localhost:5173', 'http://localhost:4173'];
+    : ['http://localhost:5000', 'http://localhost:5173', 'http://localhost:4173'];
 
 app.use('*', secureHeaders());
 app.use(
@@ -50,6 +51,17 @@ app.use(
       createContext(c) as unknown as Promise<Record<string, unknown>>,
   })
 );
+
+// ── LM Studio Health ─────────────────────────────────────
+app.get('/api/lm-studio/health', async (c) => {
+  try {
+    const localService = getLocalAgentService();
+    const available = await localService.isAvailable();
+    return c.json({ available });
+  } catch {
+    return c.json({ available: false }, 503);
+  }
+});
 
 // ── Agent Event Stream (SSE) ────────────────────────────
 app.get('/events/agents/:agentId', (c) => {

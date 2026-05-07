@@ -5,7 +5,7 @@ export default {
   out: './drizzle',
   dialect: 'sqlite',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? './data/swarm.db',
+    url: process.env.DATABASE_URL ?? 'file:./data/swarm.db',
   },
   verbose: true,
   strict: true,
