@@ -72,23 +72,23 @@
         </div>
         <div class="flex gap-4 overflow-x-auto pb-2">
 
-          <!-- STRATEGIST -->
-          <div v-if="activityMap['agent-strategist']" class="flex-shrink-0 w-80">
-            <AgentCard
-              :agent="mapActivityToAgent(activityMap['agent-strategist'])"
-              :isSelected="detailId === 'agent-strategist'"
-              @select="openDetail('agent-strategist')"
-            />
-          </div>
+           <!-- STRATEGIST -->
+           <div v-if="activityMap['agent-strategist']" class="flex-shrink-0 w-80">
+             <AgentCard
+               :agent="mapActivityToAgent(activityMap['agent-strategist'])"
+               :isSelected="detailId === 'agent-strategist'"
+               @select="openDetail('agent-strategist')"
+             />
+           </div>
 
-          <!-- HEY-SALES -->
-          <div v-if="activityMap['agent-hey-sales']" class="flex-shrink-0 w-80">
-            <AgentCard
-              :agent="mapActivityToAgent(activityMap['agent-hey-sales'])"
-              :isSelected="detailId === 'agent-hey-sales'"
-              @select="openDetail('agent-hey-sales')"
-            />
-          </div>
+           <!-- HEY-SALES -->
+           <div v-if="activityMap['agent-hey-sales']" class="flex-shrink-0 w-80">
+             <AgentCard
+               :agent="mapActivityToAgent(activityMap['agent-hey-sales'])"
+               :isSelected="detailId === 'agent-hey-sales'"
+               @select="openDetail('agent-hey-sales')"
+             />
+           </div>
 
         </div>
         <div class="mt-6 h-px bg-slate-900" />
@@ -128,6 +128,7 @@
         <div class="flex gap-4 overflow-x-auto pb-2">
 
           <!-- YOUTUBE -->
+          
           <div class="agent-card relative flex-shrink-0 w-72 bg-[#0d1117] border rounded-lg overflow-hidden"
             :class="stateClass(agentState('agent-youtube'), 'red')" @click="openDetail('agent-youtube')">
             <div class="h-0.5 w-full bg-red-500" />
@@ -385,16 +386,8 @@
   </div>
 </template>
 
-
 <script setup lang="ts">
-import { 
-  ref, 
-  computed, 
-  onMounted, 
-  onUnmounted, 
-  defineComponent, 
-  h 
-} from 'vue'; // defineComponent ve h eklendi
+import { ref, computed, onMounted, onUnmounted,defineComponent,h } from 'vue';
 import { trpc } from '../lib/trpc.js';
 import AgentCard from '../components/floor/AgentCard.vue';
 import { mapActivityToAgent } from '../composables/agentMapping';
